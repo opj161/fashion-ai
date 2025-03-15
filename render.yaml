@@ -12,13 +12,52 @@ services:
         sync: false
       - key: GEMINI_API_KEY_01
         sync: false
-      # Multiple Gemini API keys for key rotation (add as many as needed)
       - key: GEMINI_API_KEY_02
         sync: false
       - key: GEMINI_API_KEY_03
         sync: false
-      # Add more Gemini API keys following the pattern GEMINI_API_KEY_XX
-      # where XX is the number (04, 05, etc.) - up to 24
+      - key: GEMINI_API_KEY_04
+        sync: false
+      - key: GEMINI_API_KEY_05
+        sync: false
+      - key: GEMINI_API_KEY_06
+        sync: false
+      - key: GEMINI_API_KEY_07
+        sync: false
+      - key: GEMINI_API_KEY_08
+        sync: false
+      - key: GEMINI_API_KEY_09
+        sync: false
+      - key: GEMINI_API_KEY_10
+        sync: false
+      - key: GEMINI_API_KEY_11
+        sync: false
+      - key: GEMINI_API_KEY_12
+        sync: false
+      - key: GEMINI_API_KEY_13
+        sync: false
+      - key: GEMINI_API_KEY_14
+        sync: false
+      - key: GEMINI_API_KEY_15
+        sync: false
+      - key: GEMINI_API_KEY_16
+        sync: false
+      - key: GEMINI_API_KEY_17
+        sync: false
+      - key: GEMINI_API_KEY_18
+        sync: false
+      - key: GEMINI_API_KEY_19
+        sync: false
+      - key: GEMINI_API_KEY_20
+        sync: false
+      - key: GEMINI_API_KEY_21
+        sync: false
+      - key: GEMINI_API_KEY_22
+        sync: false
+      - key: GEMINI_API_KEY_23
+        sync: false
+      - key: GEMINI_API_KEY_24
+        sync: false
       - key: PORT
         value: 10000
       - key: DEBUG
