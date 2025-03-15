@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fashion-ai-backend
+    environment:
+      - GEMINI_API_KEY_01=${GEMINI_API_KEY:-your_gemini_api_key}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:${FRONTEND_PORT:-8080}}
+      - PORT=${BACKEND_PORT:-5002}
+      - DEBUG=${DEBUG:-false}
+      - HOST=0.0.0.0
+    ports:
+      - "${BACKEND_PORT:-5002}:${BACKEND_PORT:-5002}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-5002}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - fashion-ai-network
+
+  frontend:
+    build:
+      context: ./ai-photo-editor-frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${API_URL:-http://${HOST_IP:-localhost}:${BACKEND_PORT:-5002}}
+    container_name: fashion-ai-frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - fashion-ai-network
+
+networks:
+  fashion-ai-network:
+    driver: bridge

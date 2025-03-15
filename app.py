@@ -436,6 +436,17 @@ def edit_image():
         "retryInfo": retry_info
     })
 
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        "message": "AI Photo Editor API",
+        "endpoints": [
+            "/api/health",
+            "/api/generate-image",
+            "/api/edit-image"
+        ]
+    })
+
 if __name__ == '__main__':
     # Get port from environment variable
     port = int(os.environ.get('PORT', 5002))

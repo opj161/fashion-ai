@@ -46,3 +46,25 @@ logs
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Node dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build files
+*/build/
+*/dist/
+
+# Logs
+logs
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
