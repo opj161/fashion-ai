@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ai-photo-editor-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.17
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY_01
+        sync: false
+      # You can add more Gemini API keys as needed
+      - key: PORT
+        value: 10000
+      - key: DEBUG
+        value: false
+      - key: ALLOWED_ORIGINS
+        value: https://ai-photo-editor-frontend.onrender.com # Update this with your frontend URL
