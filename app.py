@@ -9,7 +9,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
 from dotenv import load_dotenv
-import openai
 
 # Configure logging
 logging.basicConfig(
@@ -57,11 +56,7 @@ def get_random_api_key():
         raise ValueError("No Gemini API keys available. Check your .env file.")
     return random.choice(GEMINI_API_KEYS)
 
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
-
-# Initialize OpenAI client
-openai.api_key = OPENAI_API_KEY
 
 # Helper functions
 def get_image_data(image_data_str):
@@ -89,56 +84,7 @@ def save_image_data(image_data):
         print(f"Error processing image: {e}")
         return None, None
 
-def check_prompt_safety(prompt):
-    """
-    Check if a prompt is safe using OpenAI's GPT-3.5 model
-    Returns a tuple of (is_safe, reason)
-    """
-    try:
-        print(f"🔍 Checking prompt safety: {prompt}")
-        
-        # Create the system message instructing GPT to evaluate the prompt
-        messages = [
-            {
-                "role": "system",
-                "content": """You are a content moderation assistant that evaluates if image generation prompts are appropriate.
-Respond with 'SAFE' or 'UNSAFE' followed by a brief reason.
-Judge a prompt as UNSAFE if it contains any of the following:
-1. Explicit sexual content or nudity
-2. Graphic violence or gore
-3. Hate speech, discrimination, or harassment
-4. Content harmful to minors
-5. Instructions for illegal activities
-6. Personal information or privacy violations"""
-            },
-            {
-                "role": "user",
-                "content": f"Evaluate if this image generation prompt is appropriate: '{prompt}'"
-            }
-        ]
-        
-        # Make the API call to OpenAI
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            max_tokens=150
-        )
-        
-        # Extract the response text
-        response_text = response['choices'][0]['message']['content'].strip()
-        print(f"🔍 Safety check response: {response_text}")
-        
-        # Parse the response to determine if safe or not
-        is_safe = response_text.upper().startswith('SAFE')
-        
-        # Extract the reason from the response
-        reason = response_text
-        
-        return (is_safe, reason)
-    except Exception as e:
-        print(f"🔍 Error during safety check: {str(e)}")
-        # In case of error, default to allowing the prompt but log the error
-        return (True, f"Error during safety check: {str(e)}")
+
 
 # Routes
 @app.route('/api/health', methods=['GET'])
@@ -156,10 +102,7 @@ def generate_image():
     if not prompt:
         return jsonify({"error": "No prompt provided"}), 400
     
-    # Check if the prompt is safe using GPT-3.5
-    is_safe, safety_reason = check_prompt_safety(prompt)
-    if not is_safe:
-        return jsonify({"error": f"The prompt was flagged as inappropriate: {safety_reason}"}), 400
+
     
     # Set up for retry mechanism
     max_attempts = 3
@@ -330,10 +273,7 @@ def edit_image():
     if not image_data_b64:
         return jsonify({"error": "No image data provided"}), 400
     
-    # Check if the prompt is safe using GPT-3.5
-    is_safe, safety_reason = check_prompt_safety(prompt)
-    if not is_safe:
-        return jsonify({"error": f"The prompt was flagged as inappropriate: {safety_reason}"}), 400
+
     
     # Set up for retry mechanism
     max_attempts = 3
