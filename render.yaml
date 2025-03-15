@@ -12,7 +12,13 @@ services:
         sync: false
       - key: GEMINI_API_KEY_01
         sync: false
-      # You can add more Gemini API keys as needed
+      # Multiple Gemini API keys for key rotation (add as many as needed)
+      - key: GEMINI_API_KEY_02
+        sync: false
+      - key: GEMINI_API_KEY_03
+        sync: false
+      # Add more Gemini API keys following the pattern GEMINI_API_KEY_XX
+      # where XX is the number (04, 05, etc.) - up to 24
       - key: PORT
         value: 10000
       - key: DEBUG
