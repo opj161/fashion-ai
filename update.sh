@@ -69,5 +69,5 @@ read -p "Deploy locally now? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo "Starting local deployment..."
-  docker-compose up -d
+  docker-compose -f docker-compose.prod.yml up -d
 fi
