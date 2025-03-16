@@ -7,11 +7,10 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [loading, setLoading] = useState(false);
   const [previewScaling, setPreviewScaling] = useState('fit');
   
-  // Simple state for the most important settings
+  // Simple state for essential settings only
   const [style, setStyle] = useState('casual');
   const [gender, setGender] = useState('female');
   const [background, setBackground] = useState('white');
-  const [productType, setProductType] = useState('top');
   
   // Style options with visual choices
   const styleOptions = [
@@ -19,7 +18,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       id: 'casual',
       name: 'Casual',
       description: 'Everyday relaxed look',
-      icon: '👚' // Using emoji as a placeholder for style icons
+      icon: '👚'
     },
     {
       id: 'professional',
@@ -41,83 +40,46 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     }
   ];
 
-  // Product type descriptions for better prompts
-  const productDescriptions = {
-    'top': 'fitted naturally with proper draping across shoulders and torso',
-    'dress': 'flowing elegantly with proper length and waistline definition',
-    'pants': 'well-fitted at waist with proper leg draping and length',
-    'jacket': 'showing proper shoulder fit and sleeve length with details visible',
-    'sweater': 'displaying texture and natural folds with good neckline detail',
-    'skirt': 'sitting properly at waist with natural movement and proper hem',
-    'suit': 'appearing tailored with clean lines and professional silhouette'
-  };
+  // Build a simple, effective prompt applicable to all clothing types
+  const buildSimplePrompt = () => {
+    const styleName = styleOptions.find(s => s.id === style)?.name || style;
+    const styleDescriptor = (() => {
+      switch (style) {
+        case 'casual':
+          return 'Capture a relaxed, natural look using soft, natural lighting.';
+        case 'professional':
+          return 'Use clean, polished lighting to evoke a business-like feel.';
+        case 'editorial':
+          return 'Incorporate dramatic lighting for a high-fashion, stylized image.';
+        case 'ecommerce':
+          return 'Provide even, clear lighting to highlight product details.';
+        default:
+          return '';
+      }
+    })();
+  
+    return `CREATE A PHOTOREALISTIC IMAGE of a ${gender} fashion model wearing this clothing item.
 
-  // Build an optimized prompt using only the needed elements
-  const buildOptimizedPrompt = () => {
-    // Get product-specific descriptions
-    const productDetails = productDescriptions[productType] || 'fitted properly on the model';
-    const productName = getProductTypeName(productType);
-    
-    // Style-specific photography descriptors
-    const styleDescriptor = getStyleDescriptor(style);
-    
-    // Build the prompt
-    return `CREATE A PHOTOREALISTIC IMAGE of a ${gender} fashion model wearing this ${productName}.
-
-Style: ${styleOptions.find(s => s.id === style)?.name} fashion photography
+Style: ${styleName} fashion photography
 Background: ${background} background
-${productType === 'dress' && gender === 'male' ? 'Note: This is menswear, not a women\'s dress' : ''}
 
-The ${productName} should be ${productDetails}. ${styleDescriptor} 
-Make this look like professional fashion photography with attractive lighting and composition.
-The garment should be the main focus, clearly visible, with a natural, flattering pose.`;
+${styleDescriptor}
+
+The image should emphasize the garment in a clear, visually appealing manner with professional lighting and a natural, flattering pose.`;
   };
 
-  // Helper function to get style-specific description
-  const getStyleDescriptor = (styleId) => {
-    switch(styleId) {
-      case 'casual':
-        return 'Create a relaxed, everyday look with natural lighting that shows the garment\'s wearability.';
-      case 'professional':
-        return 'The image should have a polished, business-appropriate feel with clean, professional lighting.';
-      case 'editorial':
-        return 'Create a fashion-forward look with dramatic lighting and a stylized, trendy appearance.';
-      case 'ecommerce':
-        return 'The image should have clean, even lighting that clearly shows all product details.';
-      default:
-        return 'Create a balanced, well-composed fashion photograph.';
-    }
-  };
-
-  // Get human-readable product type name
-  const getProductTypeName = (type) => {
-    const names = {
-      'top': 'top/shirt',
-      'dress': 'dress',
-      'pants': 'pants/trousers',
-      'jacket': 'jacket/coat',
-      'sweater': 'sweater/knitwear',
-      'skirt': 'skirt',
-      'suit': 'suit/formal wear'
-    };
-    return names[type] || type;
-  };
-
-  // Generate the fashion model image
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const prompt = buildOptimizedPrompt();
-      
-      // Use the edit-image endpoint since we're providing a source image
+      const prompt = buildSimplePrompt();
       const data = await api.editImage(prompt, clothingImage);
+      
       if (data.imageData) {
         onImageGenerated(data.imageData, {
           prompt,
           style,
           gender,
-          background,
-          productType
+          background
         });
         toast.success('Fashion image generated successfully!');
       } else {
@@ -169,25 +131,6 @@ The garment should be the main focus, clearly visible, with a natural, flatterin
                   className={`${previewScaling === 'fit' ? 'max-w-full h-auto' : 'w-auto h-auto'} max-h-80 rounded`}
                 />
               </div>
-              
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Product Type
-                </label>
-                <select
-                  value={productType}
-                  onChange={(e) => setProductType(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 px-3 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600"
-                >
-                  <option value="top">Top/Shirt/Blouse</option>
-                  <option value="dress">Dress</option>
-                  <option value="pants">Pants/Trousers</option>
-                  <option value="jacket">Jacket/Coat</option>
-                  <option value="sweater">Sweater/Knitwear</option>
-                  <option value="skirt">Skirt</option>
-                  <option value="suit">Suit/Formal Wear</option>
-                </select>
-              </div>
             </div>
           </div>
         </div>
@@ -198,24 +141,23 @@ The garment should be the main focus, clearly visible, with a natural, flatterin
             {/* Style selection */}
             <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
               <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Choose a Style</h3>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {styleOptions.map((styleOption) => (
+                {styleOptions.map((option) => (
                   <div 
-                    key={styleOption.id}
-                    onClick={() => setStyle(styleOption.id)}
+                    key={option.id}
+                    onClick={() => setStyle(option.id)}
                     className={`cursor-pointer rounded-lg border transition-all ${
-                      style === styleOption.id 
+                      style === option.id 
                         ? 'border-primary-500 ring-2 ring-primary-500/20' 
                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
                     <div className="p-3">
                       <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center mb-3">
-                        <div className="text-4xl">{styleOption.icon}</div>
+                        <div className="text-4xl">{option.icon}</div>
                       </div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100">{styleOption.name}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{styleOption.description}</p>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">{option.name}</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{option.description}</p>
                     </div>
                   </div>
                 ))}
@@ -225,30 +167,23 @@ The garment should be the main focus, clearly visible, with a natural, flatterin
             {/* Basic Settings */}
             <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
               <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Basic Settings</h3>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Model
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
                   <div className="flex space-x-3">
                     <button
                       onClick={() => setGender('female')}
-                      className={`flex-1 py-2 px-4 rounded-md border ${
-                        gender === 'female' 
-                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
-                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'
-                      } transition-colors`}
+                      className={`flex-1 py-2 px-4 rounded-md border ${gender === 'female'
+                        ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400'
+                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
                     >
                       Female
                     </button>
                     <button
                       onClick={() => setGender('male')}
-                      className={`flex-1 py-2 px-4 rounded-md border ${
-                        gender === 'male' 
-                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
-                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'
-                      } transition-colors`}
+                      className={`flex-1 py-2 px-4 rounded-md border ${gender === 'male'
+                        ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400'
+                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
                     >
                       Male
                     </button>
@@ -256,9 +191,7 @@ The garment should be the main focus, clearly visible, with a natural, flatterin
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Background
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background</label>
                   <select
                     value={background}
                     onChange={(e) => setBackground(e.target.value)}
