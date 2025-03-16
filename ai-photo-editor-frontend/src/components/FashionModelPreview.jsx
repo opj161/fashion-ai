@@ -7,6 +7,9 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [loading, setLoading] = useState(false);
   const [previewScaling, setPreviewScaling] = useState('fit');
   
+  // Tab management
+  const [activeTab, setActiveTab] = useState('basics');
+  
   // Enhanced model description options
   const [gender, setGender] = useState('female');
   const [bodyType, setBodyType] = useState('average');
@@ -19,7 +22,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [background, setBackground] = useState('studio-white');
   const [pose, setPose] = useState('natural');
   
-  // New camera and lens options
+  // Camera and lens options
   const [cameraAngle, setCameraAngle] = useState('eye-level');
   const [lens, setLens] = useState('standard');
   
@@ -28,7 +31,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [customPrompt, setCustomPrompt] = useState('');
   const [isUsingCustomPrompt, setIsUsingCustomPrompt] = useState(false);
   
-  // Model attribute options
+  // Option definitions
   const bodyTypeOptions = [
     { value: 'hourglass', label: 'Hourglass', description: 'Balanced top and bottom with defined waist' },
     { value: 'athletic', label: 'Athletic', description: 'Toned with broader shoulders' },
@@ -89,7 +92,6 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'active', label: 'Active', description: 'In motion, dynamic' },
   ];
   
-  // New camera angle options
   const cameraAngleOptions = [
     { value: 'eye-level', label: 'Eye Level', description: 'Standard direct view', icon: '👁️' },
     { value: 'high-angle', label: 'High Angle', description: 'Looking down at subject', icon: '⬇️' },
@@ -97,7 +99,6 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'three-quarter', label: '3/4 View', description: 'Angled perspective', icon: '↗️' },
   ];
   
-  // New lens options
   const lensOptions = [
     { value: 'portrait', label: 'Portrait (85mm f/1.8)', description: 'Blurred background, flattering perspective' },
     { value: 'standard', label: 'Standard (50mm f/5.6)', description: 'Natural perspective, medium focus depth' },
@@ -105,7 +106,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'telephoto', label: 'Telephoto (135mm f/2.8)', description: 'Compressed perspective, isolated subject' },
   ];
 
-  // Helper functions for structured prompt
+  // Prompt building helpers
   const getBackgroundDescription = () => {
     if (background.startsWith('studio')) {
       return `Clean, professional ${background === 'studio-gradient' ? 'gradient' : 'white'} studio background with subtle shadows`;
@@ -153,8 +154,8 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       default: return 'professional camera equipment';
     }
   };
-  
-  // Structured prompt builder using sections
+
+  // Structured prompt builder
   const buildEnhancedPrompt = () => {
     // Subject section
     const bodyTypeLabel = bodyTypeOptions.find(o => o.value === bodyType)?.label || 'balanced';
@@ -184,10 +185,9 @@ Style: ${styleSection}
 Technical details: ${technicalSection}`;
   };
 
-  // Toggle prompt editor visibility
+  // Toggle prompt editor
   const togglePromptEditor = () => {
     if (!showPromptEditor) {
-      // When opening editor, initialize with current auto-generated prompt
       setCustomPrompt(buildEnhancedPrompt());
     }
     setShowPromptEditor(!showPromptEditor);
@@ -197,7 +197,6 @@ Technical details: ${technicalSection}`;
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      // Use either custom or auto-generated prompt
       const prompt = isUsingCustomPrompt ? customPrompt : buildEnhancedPrompt();
       const data = await api.editImage(prompt, clothingImage);
       
@@ -228,7 +227,21 @@ Technical details: ${technicalSection}`;
     }
   };
 
-  // Helper component for attribute selectors with descriptions
+  // Helper components
+  const TabButton = ({ isActive, onClick, icon, label }) => (
+    <button
+      onClick={onClick}
+      className={`px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition-colors ${
+        isActive 
+          ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-500 dark:border-primary-400 font-medium' 
+          : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/30'
+      }`}
+    >
+      <span className="text-lg">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+  
   const AttributeSelect = ({ label, value, onChange, options, className = "" }) => (
     <div className={className}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -251,7 +264,6 @@ Technical details: ${technicalSection}`;
     </div>
   );
   
-  // Component for camera angle selection
   const CameraAngleSelect = () => (
     <div>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -324,193 +336,219 @@ Technical details: ${technicalSection}`;
         
         {/* Right side: model customization options */}
         <div className="md:col-span-2">
-          <div className="space-y-6">
-            {/* Gender selection */}
-            <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-              <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Model Gender</h3>
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={() => setGender('female')}
-                  className={`flex-1 py-3 px-4 rounded-lg border ${gender === 'female' 
-                    ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
-                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
-                >
-                  <div className="text-2xl mb-1">👩</div>
-                  <div className="font-medium">Female</div>
-                </button>
-                <button
-                  onClick={() => setGender('male')}
-                  className={`flex-1 py-3 px-4 rounded-lg border ${gender === 'male' 
-                    ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
-                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
-                >
-                  <div className="text-2xl mb-1">👨</div>
-                  <div className="font-medium">Male</div>
-                </button>
-              </div>
-            </div>
-
-            {/* Model physical attributes */}
-            <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-              <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Model Characteristics</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <AttributeSelect 
-                  label="Body Size" 
-                  value={bodySize} 
-                  onChange={setBodySize} 
-                  options={bodySizeOptions}
-                />
-                
-                <AttributeSelect 
-                  label="Height" 
-                  value={height} 
-                  onChange={setHeight} 
-                  options={heightOptions}
-                />
-                
-                <AttributeSelect 
-                  label="Body Type" 
-                  value={bodyType} 
-                  onChange={setBodyType} 
-                  options={bodyTypeOptions}
-                />
-                
-                <AttributeSelect 
-                  label="Age Range" 
-                  value={age} 
-                  onChange={setAge} 
-                  options={ageOptions}
-                />
-                
-                <AttributeSelect 
-                  label="Ethnicity" 
-                  value={ethnicity} 
-                  onChange={setEthnicity} 
-                  options={ethnicityOptions}
-                />
-              </div>
+          <div className="space-y-4">
+            {/* Tab Navigation */}
+            <div className="flex border-b dark:border-gray-700 overflow-x-auto hide-scrollbar">
+              <TabButton 
+                isActive={activeTab === 'basics'} 
+                onClick={() => setActiveTab('basics')}
+                icon="👔"
+                label="Basics"
+              />
+              <TabButton 
+                isActive={activeTab === 'appearance'} 
+                onClick={() => setActiveTab('appearance')}
+                icon="👤"
+                label="Appearance" 
+              />
+              <TabButton 
+                isActive={activeTab === 'environment'} 
+                onClick={() => setActiveTab('environment')}
+                icon="🏞️"
+                label="Setting"
+              />
+              <TabButton 
+                isActive={activeTab === 'photography'} 
+                onClick={() => setActiveTab('photography')}
+                icon="📸"
+                label="Photography"
+              />
+              <TabButton 
+                isActive={activeTab === 'advanced'} 
+                onClick={() => setActiveTab('advanced')}
+                icon="⚙️"
+                label="Advanced"
+              />
             </div>
             
-            {/* Setting options */}
-            <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-              <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Environment & Style</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <AttributeSelect 
-                  label="Background" 
-                  value={background} 
-                  onChange={setBackground} 
-                  options={backgroundOptions}
-                />
-                
-                <AttributeSelect 
-                  label="Pose Style" 
-                  value={pose} 
-                  onChange={setPose} 
-                  options={poseOptions}
-                />
-              </div>
-            </div>
-            
-            {/* Camera settings - NEW */}
-            <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-              <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Photography Settings</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Camera angle selector with visual buttons */}
-                <CameraAngleSelect />
-                
-                {/* Lens options */}
-                <AttributeSelect
-                  label="Lens & Depth of Field"
-                  value={lens}
-                  onChange={setLens}
-                  options={lensOptions}
-                />
-              </div>
-            </div>
-            
-            {/* Prompt Preview & Editor - NEW */}
-            <div className="border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200 overflow-hidden">
-              <button 
-                onClick={togglePromptEditor}
-                className="w-full p-3 text-left flex justify-between items-center hover:bg-gray-100 dark:hover:bg-gray-700/30"
-              >
-                <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                  Advanced: View & Edit Prompt
-                </h3>
-                <svg 
-                  className={`h-5 w-5 transform transition-transform ${showPromptEditor ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showPromptEditor && (
-                <div className="p-4 border-t dark:border-gray-700">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {customPrompt.length} characters
-                      {customPrompt.length > 800 && 
-                        <span className="text-amber-600 dark:text-amber-400 ml-2">
-                          (Very long prompts may be truncated)
-                        </span>
-                      }
-                    </div>
-                    <div className="space-x-2">
+            {/* Tab Content */}
+            <div className="p-1">
+              {/* Basic Settings Tab */}
+              {activeTab === 'basics' && (
+                <div className="space-y-6">
+                  {/* Gender selection */}
+                  <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+                    <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Model Gender</h3>
+                    <div className="flex flex-wrap gap-4">
                       <button
-                        onClick={() => {
-                          setCustomPrompt(buildEnhancedPrompt());
-                          setIsUsingCustomPrompt(false);
-                        }}
-                        className="text-xs py-1 px-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        onClick={() => setGender('female')}
+                        className={`flex-1 py-3 px-4 rounded-lg border ${gender === 'female' 
+                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
+                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
                       >
-                        Reset
+                        <div className="text-2xl mb-1">👩</div>
+                        <div className="font-medium">Female</div>
                       </button>
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(customPrompt);
-                          toast.success('Prompt copied!');
-                        }}
-                        className="text-xs py-1 px-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        onClick={() => setGender('male')}
+                        className={`flex-1 py-3 px-4 rounded-lg border ${gender === 'male' 
+                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
+                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
                       >
-                        Copy
+                        <div className="text-2xl mb-1">👨</div>
+                        <div className="font-medium">Male</div>
                       </button>
                     </div>
                   </div>
                   
-                  <textarea
-                    value={customPrompt}
-                    onChange={(e) => {
-                      setCustomPrompt(e.target.value);
-                      setIsUsingCustomPrompt(true);
-                    }}
-                    className="w-full border rounded-md p-3 h-32 dark:bg-gray-800 dark:border-gray-600"
-                    placeholder="Edit the generation prompt..."
-                  />
-                  
-                  <div className="mt-2 flex items-center">
-                    <input
-                      type="checkbox"
-                      id="useCustomPrompt"
-                      checked={isUsingCustomPrompt}
-                      onChange={(e) => setIsUsingCustomPrompt(e.target.checked)}
-                      className="mr-2"
+                  {/* Basic body size selection */}
+                  <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+                    <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Basic Sizing</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <AttributeSelect 
+                        label="Body Size" 
+                        value={bodySize} 
+                        onChange={setBodySize} 
+                        options={bodySizeOptions}
+                      />
+                      <AttributeSelect 
+                        label="Height" 
+                        value={height} 
+                        onChange={setHeight} 
+                        options={heightOptions}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Appearance Tab */}
+              {activeTab === 'appearance' && (
+                <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+                  <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Model Characteristics</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <AttributeSelect 
+                      label="Body Type" 
+                      value={bodyType} 
+                      onChange={setBodyType} 
+                      options={bodyTypeOptions}
                     />
-                    <label htmlFor="useCustomPrompt" className="text-sm text-gray-700 dark:text-gray-300">
-                      Use edited prompt instead of auto-generated
-                    </label>
+                    <AttributeSelect 
+                      label="Age Range" 
+                      value={age} 
+                      onChange={setAge} 
+                      options={ageOptions}
+                    />
+                    <AttributeSelect 
+                      label="Ethnicity" 
+                      value={ethnicity} 
+                      onChange={setEthnicity} 
+                      options={ethnicityOptions}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Environment Tab */}
+              {activeTab === 'environment' && (
+                <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+                  <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Environment & Style</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <AttributeSelect 
+                      label="Background" 
+                      value={background} 
+                      onChange={setBackground} 
+                      options={backgroundOptions}
+                    />
+                    <AttributeSelect 
+                      label="Pose Style" 
+                      value={pose} 
+                      onChange={setPose} 
+                      options={poseOptions}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Photography Tab */}
+              {activeTab === 'photography' && (
+                <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+                  <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Photography Settings</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CameraAngleSelect />
+                    <AttributeSelect
+                      label="Lens & Depth of Field"
+                      value={lens}
+                      onChange={setLens}
+                      options={lensOptions}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Advanced Tab - Prompt Editor */}
+              {activeTab === 'advanced' && (
+                <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+                  <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Advanced Prompt Editor</h3>
+                  <div>
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {customPrompt.length || buildEnhancedPrompt().length} characters
+                        {(customPrompt.length > 800 || (!customPrompt && buildEnhancedPrompt().length > 800)) && 
+                          <span className="text-amber-600 dark:text-amber-400 ml-2">
+                            (Very long prompts may be truncated)
+                          </span>
+                        }
+                      </div>
+                      <div className="space-x-2">
+                        <button
+                          onClick={() => {
+                            setCustomPrompt(buildEnhancedPrompt());
+                            setIsUsingCustomPrompt(false);
+                          }}
+                          className="text-xs py-1 px-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        >
+                          Reset
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(customPrompt || buildEnhancedPrompt());
+                            toast.success('Prompt copied!');
+                          }}
+                          className="text-xs py-1 px-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      value={customPrompt || buildEnhancedPrompt()}
+                      onChange={(e) => {
+                        setCustomPrompt(e.target.value);
+                        setIsUsingCustomPrompt(true);
+                      }}
+                      className="w-full border rounded-md p-3 h-48 dark:bg-gray-800 dark:border-gray-600"
+                      placeholder="Edit the generation prompt..."
+                    />
+                    <div className="mt-2 flex items-center">
+                      <input
+                        type="checkbox"
+                        id="useCustomPrompt"
+                        checked={isUsingCustomPrompt}
+                        onChange={(e) => setIsUsingCustomPrompt(e.target.checked)}
+                        className="mr-2"
+                      />
+                      <label htmlFor="useCustomPrompt" className="text-sm text-gray-700 dark:text-gray-300">
+                        Use edited prompt instead of auto-generated
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
             
-            {/* Generate button */}
-            <div className="flex justify-end">
+            {/* Generate button - always visible */}
+            <div className="flex justify-end mt-6">
               <button
                 onClick={handleGenerate}
                 disabled={loading}
