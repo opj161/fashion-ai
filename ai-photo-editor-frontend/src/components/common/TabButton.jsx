@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 /**
  * TabButton component for navigation tabs
  * @param {boolean} isActive - Whether this tab is currently active
@@ -20,5 +22,13 @@ function TabButton({ isActive, onClick, icon, label }) {
     </button>
   );
 }
+
+// Add PropTypes validation
+TabButton.propTypes = {
+  isActive: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+  icon: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired
+};
 
 export default TabButton;

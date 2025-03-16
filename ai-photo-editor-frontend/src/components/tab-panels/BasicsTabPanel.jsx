@@ -1,4 +1,8 @@
+import PropTypes from 'prop-types';
 import AttributeSelect from '../common/AttributeSelect';
+import InfoBox from '../common/InfoBox';
+import CardContainer from '../common/CardContainer';
+import useComponentStyles from '../../hooks/useComponentStyles';
 
 /**
  * BasicsTabPanel component for basic model settings
@@ -17,11 +21,12 @@ function BasicsTabPanel({
   bodySizeOptions, 
   heightOptions 
 }) {
+  const styles = useComponentStyles();
+  
   return (
     <div className="space-y-6">
       {/* Gender selection */}
-      <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-        <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Model Gender</h3>
+      <CardContainer title="Model Gender">
         <div className="flex flex-wrap gap-4">
           <button
             onClick={() => trackChange('gender', 'female')}
@@ -42,12 +47,11 @@ function BasicsTabPanel({
             <div className="font-medium">Male</div>
           </button>
         </div>
-      </div>
+      </CardContainer>
       
       {/* Basic body size selection */}
-      <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-        <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Basic Sizing</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <CardContainer title="Basic Sizing">
+        <div className={styles.grid.twoColumn}>
           <AttributeSelect 
             label="Body Size" 
             stateKey="bodySize"
@@ -64,14 +68,34 @@ function BasicsTabPanel({
           />
         </div>
         
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
-          <p className="text-xs text-blue-600 dark:text-blue-300">
-            <span className="font-medium">Tip:</span> "Default" options won't be included in the prompt - the AI will decide based on context. Select specific values only when important for your item.
-          </p>
-        </div>
-      </div>
+        <InfoBox type="tip" title="Tip">
+          "Default" options won't be included in the prompt - the AI will decide based on context. Select specific values only when important for your item.
+        </InfoBox>
+      </CardContainer>
     </div>
   );
 }
+
+// Add PropTypes validation
+BasicsTabPanel.propTypes = {
+  gender: PropTypes.string.isRequired,
+  trackChange: PropTypes.func.isRequired,
+  bodySize: PropTypes.string.isRequired,
+  height: PropTypes.string.isRequired,
+  bodySizeOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string
+    })
+  ).isRequired,
+  heightOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string
+    })
+  ).isRequired
+};
 
 export default BasicsTabPanel;

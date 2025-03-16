@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
@@ -42,8 +43,8 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [customPrompt, setCustomPrompt] = useState('');
   const [isUsingCustomPrompt, setIsUsingCustomPrompt] = useState(false);
   
-  // Track changes function
-  const trackChange = (option, value) => {
+  // Memoize the trackChange function to prevent unnecessary re-renders
+  const trackChange = useCallback((option, value) => {
     // Update the corresponding state variable
     switch(option) {
       case 'gender': setGender(value); break;
@@ -61,10 +62,10 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     
     // Mark this option as modified by the user
     setModifiedOptions(prev => ({...prev, [option]: true}));
-  };
+  }, []);
   
-  // Model attribute options
-  const bodyTypeOptions = [
+  // Memoize options arrays since they don't change
+  const bodyTypeOptions = useMemo(() => [
     { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing' },
     { value: 'hourglass', label: 'Hourglass', description: 'Balanced top and bottom with defined waist' },
     { value: 'athletic', label: 'Athletic', description: 'Toned with broader shoulders' },
@@ -72,33 +73,34 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'apple', label: 'Apple', description: 'Fuller mid-section, slimmer legs' },
     { value: 'rectangular', label: 'Rectangular', description: 'Balanced with less defined waist' },
     { value: 'average', label: 'Balanced', description: 'Standard proportions' },
-  ];
+  ], []);
   
-  const bodySizeOptions = [
+  // Similarly memoize other options arrays
+  const bodySizeOptions = useMemo(() => [
     { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing' },
     { value: 'petite', label: 'Petite', description: 'Smaller frame' },
     { value: 'slim', label: 'Slim', description: 'Lean build' },
     { value: 'medium', label: 'Medium', description: 'Average build' },
     { value: 'curvy', label: 'Curvy', description: 'Fuller figure' },
     { value: 'plus', label: 'Plus', description: 'Plus size' },
-  ];
+  ], []);
   
-  const heightOptions = [
+  const heightOptions = useMemo(() => [
     { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing' },
     { value: 'petite', label: 'Short', description: 'Below average height' },
     { value: 'average', label: 'Average', description: 'Standard height' },
     { value: 'tall', label: 'Tall', description: 'Above average height' },
-  ];
+  ], []);
   
-  const ageOptions = [
+  const ageOptions = useMemo(() => [
     { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing style' },
     { value: 'young-adult', label: 'Young Adult', description: '20s' },
     { value: 'adult', label: 'Adult', description: '30s-40s' },
     { value: 'mature', label: 'Mature', description: '50s-60s' },
     { value: 'senior', label: 'Senior', description: '65+' },
-  ];
+  ], []);
   
-  const ethnicityOptions = [
+  const ethnicityOptions = useMemo(() => [
     { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine appropriate diversity' },
     { value: 'diverse', label: 'Diverse', description: 'Unspecified/mixed' },
     { value: 'caucasian', label: 'Caucasian', description: 'Fair/light skin tones' },
@@ -106,9 +108,9 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'asian', label: 'Asian', description: 'East/South Asian features' },
     { value: 'hispanic', label: 'Hispanic/Latino', description: 'Latin American features' },
     { value: 'middle-eastern', label: 'Middle Eastern', description: 'Middle Eastern features' },
-  ];
+  ], []);
   
-  const backgroundOptions = [
+  const backgroundOptions = useMemo(() => [
     { value: 'studio-white', label: 'Studio White', description: 'Clean professional backdrop' },
     { value: 'studio-gradient', label: 'Studio Gradient', description: 'Smooth color transition' },
     { value: 'in-store', label: 'In-store', description: 'Retail environment' },
@@ -120,36 +122,36 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'seasonal-summer', label: 'Seasonal - Summer', description: 'Summer atmosphere' },
     { value: 'seasonal-fall', label: 'Seasonal - Fall', description: 'Fall/Autumn atmosphere' },
     { value: 'seasonal-winter', label: 'Seasonal - Winter', description: 'Winter atmosphere' },
-  ];
+  ], []);
   
-  const poseOptions = [
+  const poseOptions = useMemo(() => [
     { value: 'default', label: 'Default (natural)', description: 'Let AI choose appropriate pose' },
     { value: 'natural', label: 'Natural', description: 'Relaxed, everyday stance' },
     { value: 'professional', label: 'Professional', description: 'Formal, business-like' },
     { value: 'editorial', label: 'Editorial', description: 'Fashion magazine style' },
     { value: 'active', label: 'Active', description: 'In motion, dynamic' },
-  ];
+  ], []);
   
   // Camera angle options with default
-  const cameraAngleOptions = [
+  const cameraAngleOptions = useMemo(() => [
     { value: 'default', label: 'Default', description: 'Let AI choose the best angle', icon: '🎯' },
     { value: 'eye-level', label: 'Eye Level', description: 'Standard direct view', icon: '👁️' },
     { value: 'high-angle', label: 'High Angle', description: 'Looking down at subject', icon: '⬇️' },
     { value: 'low-angle', label: 'Low Angle', description: 'Looking up at subject', icon: '⬆️' },
     { value: 'three-quarter', label: '3/4 View', description: 'Angled perspective', icon: '↗️' },
-  ];
+  ], []);
   
   // Lens options with default
-  const lensOptions = [
+  const lensOptions = useMemo(() => [
     { value: 'default', label: 'Default (optimal)', description: 'Let AI choose the best lens settings' },
     { value: 'portrait', label: 'Portrait (85mm f/1.8)', description: 'Blurred background, flattering perspective' },
     { value: 'standard', label: 'Standard (50mm f/5.6)', description: 'Natural perspective, medium focus depth' },
     { value: 'wide', label: 'Wide (35mm f/8)', description: 'Sharp throughout, shows environment' },
     { value: 'telephoto', label: 'Telephoto (135mm f/2.8)', description: 'Compressed perspective, isolated subject' },
-  ];
+  ], []);
 
-  // Helper functions for prompt generation
-  const getBackgroundDescription = () => {
+  // Memoize helper functions
+  const getBackgroundDescription = useCallback(() => {
     if (background.startsWith('studio')) {
       return `Clean, professional ${background === 'studio-gradient' ? 'gradient' : 'white'} studio background with subtle shadows`;
     } else if (background.startsWith('in-store')) {
@@ -165,9 +167,9 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       return `Seasonal ${season} atmosphere with characteristic lighting and environment`;
     }
     return 'Clean, well-lit background';
-  };
+  }, [background]);
   
-  const getPoseDescription = () => {
+  const getPoseDescription = useCallback(() => {
     switch (pose) {
       case 'default': return '';
       case 'natural': return 'standing in a relaxed, natural pose';
@@ -176,9 +178,9 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       case 'active': return 'in a dynamic, engaging pose showing movement';
       default: return 'in a natural, flattering position';
     }
-  };
+  }, [pose]);
   
-  const getCameraDescription = () => {
+  const getCameraDescription = useCallback(() => {
     switch (cameraAngle) {
       case 'default': return 'optimal';
       case 'eye-level': return 'direct eye-level';
@@ -187,9 +189,9 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       case 'three-quarter': return 'three-quarter angled';
       default: return 'balanced';
     }
-  };
+  }, [cameraAngle]);
   
-  const getLensDescription = () => {
+  const getLensDescription = useCallback(() => {
     switch (lens) {
       case 'default': return 'professional camera equipment';
       case 'portrait': return 'an 85mm portrait lens at f/1.8 with pleasing background blur';
@@ -198,10 +200,10 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       case 'telephoto': return 'a 135mm telephoto lens at f/2.8 with compressed perspective';
       default: return 'professional camera equipment';
     }
-  };
+  }, [lens]);
   
-  // Structured prompt builder using sections
-  const buildEnhancedPrompt = () => {
+  // Memoize the buildEnhancedPrompt function with its dependencies
+  const buildEnhancedPrompt = useCallback(() => {
     // Subject section - only include non-default attributes
     let subjectAttributes = [];
     
@@ -272,7 +274,14 @@ Setting: ${settingSection}
 Style: ${styleSection}
 
 Technical details: ${technicalSection}`;
-  };
+  }, [
+    bodySize, height, ethnicity, bodyType, age, gender, pose, 
+    background, lens, cameraAngle, 
+    bodySizeOptions, heightOptions, ethnicityOptions, 
+    bodyTypeOptions, ageOptions,
+    getBackgroundDescription, getPoseDescription, 
+    getCameraDescription, getLensDescription
+  ]);
   
   // Toggle prompt editor visibility
   const togglePromptEditor = () => {
@@ -283,8 +292,8 @@ Technical details: ${technicalSection}`;
     setShowPromptEditor(!showPromptEditor);
   };
   
-  // Handle image generation
-  const handleGenerate = async () => {
+  // Memoize the handleGenerate function
+  const handleGenerate = useCallback(async () => {
     setLoading(true);
     try {
       // Use either custom or auto-generated prompt
@@ -317,7 +326,11 @@ Technical details: ${technicalSection}`;
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    isUsingCustomPrompt, customPrompt, buildEnhancedPrompt, 
+    clothingImage, gender, bodyType, bodySize, height, 
+    age, ethnicity, background, pose, cameraAngle, lens, onImageGenerated
+  ]);
   
   return (
     <div className="space-y-6">
@@ -441,5 +454,10 @@ Technical details: ${technicalSection}`;
     </div>
   );
 }
+
+FashionModelPreview.propTypes = {
+  clothingImage: PropTypes.string.isRequired,
+  onImageGenerated: PropTypes.func.isRequired
+};
 
 export default FashionModelPreview;

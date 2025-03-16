@@ -1,4 +1,7 @@
+import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
+import InfoBox from '../common/InfoBox';
+import { CARD_STYLES, BUTTON_VARIANTS } from '../../styles/constants';
 
 /**
  * AdvancedTabPanel component for prompt editing
@@ -16,8 +19,8 @@ function AdvancedTabPanel({
   buildEnhancedPrompt
 }) {
   return (
-    <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-      <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Advanced Prompt Editor</h3>
+    <div className={CARD_STYLES.container}>
+      <h3 className={CARD_STYLES.title}>Advanced Prompt Editor</h3>
       <div>
         <div className="mb-3 flex items-center justify-between">
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -71,14 +74,21 @@ function AdvancedTabPanel({
           </label>
         </div>
         
-        <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-md">
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            <span className="font-medium">Advanced users only:</span> Edit the prompt directly to fine-tune the generation. Be sure to maintain the key instruction "CREATE A PHOTOREALISTIC IMAGE" at the beginning.
-          </p>
-        </div>
+        <InfoBox type="warning" title="Advanced users only">
+          Edit the prompt directly to fine-tune the generation. Be sure to maintain the key instruction "CREATE A PHOTOREALISTIC IMAGE" at the beginning.
+        </InfoBox>
       </div>
     </div>
   );
 }
+
+// Add PropTypes validation
+AdvancedTabPanel.propTypes = {
+  customPrompt: PropTypes.string.isRequired,
+  isUsingCustomPrompt: PropTypes.bool.isRequired,
+  setCustomPrompt: PropTypes.func.isRequired,
+  setIsUsingCustomPrompt: PropTypes.func.isRequired,
+  buildEnhancedPrompt: PropTypes.func.isRequired
+};
 
 export default AdvancedTabPanel;

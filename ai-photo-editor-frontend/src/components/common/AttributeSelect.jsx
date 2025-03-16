@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 /**
  * AttributeSelect component for selecting model attributes with descriptions
  * @param {string} label - Label text for the select input
@@ -42,5 +44,25 @@ function AttributeSelect({ label, stateKey, value, onChange, options, className 
     </div>
   );
 }
+
+// Add PropTypes validation
+AttributeSelect.propTypes = {
+  label: PropTypes.string.isRequired,
+  stateKey: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string
+    })
+  ).isRequired,
+  className: PropTypes.string
+};
+
+AttributeSelect.defaultProps = {
+  className: ""
+};
 
 export default AttributeSelect;

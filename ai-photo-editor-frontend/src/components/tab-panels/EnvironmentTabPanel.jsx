@@ -1,4 +1,7 @@
+import PropTypes from 'prop-types';
 import AttributeSelect from '../common/AttributeSelect';
+import InfoBox from '../common/InfoBox';
+import { CARD_STYLES } from '../../styles/constants';
 
 /**
  * EnvironmentTabPanel component for background and pose settings
@@ -16,8 +19,8 @@ function EnvironmentTabPanel({
   poseOptions
 }) {
   return (
-    <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-      <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Environment & Style</h3>
+    <div className={CARD_STYLES.container}>
+      <h3 className={CARD_STYLES.title}>Environment & Style</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AttributeSelect 
           label="Background" 
@@ -35,13 +38,32 @@ function EnvironmentTabPanel({
         />
       </div>
       
-      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
-        <p className="text-xs text-blue-600 dark:text-blue-300">
-          <span className="font-medium">Note:</span> Background and pose greatly impact how your clothing item appears. Choose settings that highlight your product best.
-        </p>
-      </div>
+      <InfoBox type="note" title="Note">
+        Background and pose greatly impact how your clothing item appears. Choose settings that highlight your product best.
+      </InfoBox>
     </div>
   );
 }
+
+// Add PropTypes validation
+EnvironmentTabPanel.propTypes = {
+  background: PropTypes.string.isRequired,
+  pose: PropTypes.string.isRequired,
+  trackChange: PropTypes.func.isRequired,
+  backgroundOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string
+    })
+  ).isRequired,
+  poseOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string
+    })
+  ).isRequired
+};
 
 export default EnvironmentTabPanel;

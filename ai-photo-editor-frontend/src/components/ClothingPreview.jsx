@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
+import PropTypes from 'prop-types';
 
 /**
  * ClothingPreview component for displaying the uploaded clothing image
@@ -46,4 +47,9 @@ function ClothingPreview({ clothingImage }) {
   );
 }
 
-export default ClothingPreview;
+ClothingPreview.propTypes = {
+  clothingImage: PropTypes.string.isRequired
+};
+
+// Use React.memo to prevent unnecessary re-renders when props don't change
+export default memo(ClothingPreview);

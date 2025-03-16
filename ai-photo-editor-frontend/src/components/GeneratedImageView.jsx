@@ -1,23 +1,31 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
+import LoadingSpinner from './LoadingSpinner';
+import InfoBox from './common/InfoBox';
+import { CARD_STYLES, BUTTON_VARIANTS } from '../styles/constants';
 
+/**
+ * Component for displaying a generated image with metadata and download options
+ * @param {string} image - Base64 encoded image data
+ * @param {Object} metadata - Information about how the image was generated
+ */
 function GeneratedImageView({ image, metadata }) {
   const [isDownloading, setIsDownloading] = useState(false);
   
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      // Create temporary link element
       const link = document.createElement('a');
       link.href = `data:image/jpeg;base64,${image}`;
-      link.download = `fashion-image-${Date.now()}.jpg`;
+      link.download = `fashion-model-${Date.now()}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success('Image downloaded!');
+      toast.success('Image downloaded successfully!');
     } catch (error) {
-      toast.error('Failed to download image');
       console.error('Download error:', error);
+      toast.error('Failed to download image');
     } finally {
       setIsDownloading(false);
     }
@@ -25,70 +33,130 @@ function GeneratedImageView({ image, metadata }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-        {/* Large image display */}
-        <div className="w-full max-w-3xl mb-6">
-          <img 
-            src={`data:image/jpeg;base64,${image}`} 
-            alt="Generated fashion model" 
-            className="w-full h-auto rounded-lg shadow-md"
-          />
-        </div>
-        
-        {/* Prompt information */}
-        <div className="w-full max-w-3xl bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6 transition-colors duration-300">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Image Generation Prompt</h3>
-          <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line">
-            {metadata?.prompt || "No prompt information available"}
-          </p>
-        </div>
-        
-        {/* Actions */}
-        <div className="flex space-x-4">
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="py-2 px-6 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600 
-                      text-white rounded-lg flex items-center justify-center transition-colors duration-200
-                      disabled:bg-green-400 dark:disabled:bg-green-800"
-          >
-            {isDownloading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Downloading...
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download Image
-              </>
-            )}
-          </button>
-          
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(metadata?.prompt || "")
-                .then(() => toast.success('Prompt copied to clipboard!'))
-                .catch(() => toast.error('Failed to copy prompt'));
-            }}
-            className="py-2 px-6 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
-                      text-gray-800 dark:text-gray-200 rounded-lg flex items-center justify-center
-                      transition-colors duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            Copy Prompt
-          </button>
-        </div>
+      {/* Image container */}
+      <div className="border dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+        <img 
+          src={`data:image/jpeg;base64,${image}`} 
+          alt="Generated fashion model" 
+          className="w-full h-auto rounded-lg shadow-md"
+        />
       </div>
+      
+      {/* Prompt information */}
+      <div className={CARD_STYLES.container}>
+        <h3 className={CARD_STYLES.title}>Image Generation Prompt</h3>
+        <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line">
+          {metadata?.prompt || "No prompt information available"}
+        </p>
+      </div>
+      
+      {/* Settings used */}
+      {metadata && Object.keys(metadata).length > 1 && (
+        <div className={CARD_STYLES.container}>
+          <h3 className={CARD_STYLES.title}>Settings Used</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {metadata.gender && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Gender:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.gender}</span>
+              </div>
+            )}
+            {metadata.bodyType && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Body Type:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.bodyType}</span>
+              </div>
+            )}
+            {metadata.bodySize && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Body Size:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.bodySize}</span>
+              </div>
+            )}
+            {metadata.height && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Height:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.height}</span>
+              </div>
+            )}
+            {metadata.age && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Age:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.age}</span>
+              </div>
+            )}
+            {metadata.ethnicity && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Ethnicity:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.ethnicity}</span>
+              </div>
+            )}
+            {metadata.background && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Background:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.background}</span>
+              </div>
+            )}
+            {metadata.pose && (
+              <div className="text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Pose:</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{metadata.pose}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Actions */}
+      <div className="flex space-x-4">
+        <button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className={`${BUTTON_VARIANTS.primary} ${isDownloading ? 'opacity-75' : ''} flex items-center`}
+        >
+          {isDownloading ? (
+            <>
+              <LoadingSpinner size="sm" /> 
+              <span className="ml-2">Downloading...</span>
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Image
+            </>
+          )}
+        </button>
+      </div>
+      
+      <InfoBox type="tip" title="Tip">
+        If you're not satisfied with the result, you can go back and try different settings or edit this image further.
+      </InfoBox>
     </div>
   );
 }
+
+GeneratedImageView.propTypes = {
+  image: PropTypes.string.isRequired,
+  metadata: PropTypes.shape({
+    prompt: PropTypes.string,
+    gender: PropTypes.string,
+    bodyType: PropTypes.string,
+    bodySize: PropTypes.string,
+    height: PropTypes.string,
+    age: PropTypes.string,
+    ethnicity: PropTypes.string,
+    background: PropTypes.string,
+    pose: PropTypes.string,
+    cameraAngle: PropTypes.string,
+    lens: PropTypes.string,
+    isCustomPrompt: PropTypes.bool
+  })
+};
+
+GeneratedImageView.defaultProps = {
+  metadata: {}
+};
 
 export default GeneratedImageView;

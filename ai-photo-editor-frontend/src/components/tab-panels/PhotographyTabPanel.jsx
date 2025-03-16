@@ -1,4 +1,7 @@
+import PropTypes from 'prop-types';
 import AttributeSelect from '../common/AttributeSelect';
+import InfoBox from '../common/InfoBox';
+import { CARD_STYLES } from '../../styles/constants';
 
 /**
  * PhotographyTabPanel component for camera angle and lens settings
@@ -16,8 +19,8 @@ function PhotographyTabPanel({
   lensOptions
 }) {
   return (
-    <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
-      <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Photography Settings</h3>
+    <div className={CARD_STYLES.container}>
+      <h3 className={CARD_STYLES.title}>Photography Settings</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Camera angle selector with visual buttons */}
         <div>
@@ -62,13 +65,33 @@ function PhotographyTabPanel({
         />
       </div>
       
-      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
-        <p className="text-xs text-blue-600 dark:text-blue-300">
-          <span className="font-medium">Tip:</span> "Default" lens and camera settings work well for most items. Adjust these only for specific visual effects.
-        </p>
-      </div>
+      <InfoBox type="tip" title="Tip">
+        "Default" lens and camera settings work well for most items. Adjust these only for specific visual effects.
+      </InfoBox>
     </div>
   );
 }
+
+// Add PropTypes validation
+PhotographyTabPanel.propTypes = {
+  cameraAngle: PropTypes.string.isRequired,
+  lens: PropTypes.string.isRequired,
+  trackChange: PropTypes.func.isRequired,
+  cameraAngleOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string,
+      icon: PropTypes.string
+    })
+  ).isRequired,
+  lensOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      description: PropTypes.string
+    })
+  ).isRequired
+};
 
 export default PhotographyTabPanel;
