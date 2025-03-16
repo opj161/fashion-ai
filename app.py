@@ -10,6 +10,7 @@ from flask_cors import CORS
 from PIL import Image
 from dotenv import load_dotenv
 import storage
+from key_manager import KeyManager
 
 # Configure logging
 logging.basicConfig(
@@ -51,11 +52,15 @@ if not GEMINI_API_KEYS:
 else:
     logger.info(f"Loaded {len(GEMINI_API_KEYS)} Gemini API keys")
 
+# Initialize the key manager
+key_manager = KeyManager(GEMINI_API_KEYS)
+
 # Function to get a random API key
-def get_random_api_key():
+def get_api_key():
+    """Get the best available API key using the key manager"""
     if not GEMINI_API_KEYS:
         raise ValueError("No Gemini API keys available. Check your .env file.")
-    return random.choice(GEMINI_API_KEYS)
+    return key_manager.get_key()
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
 
@@ -147,22 +152,30 @@ def generate_image():
                 print(f"🔍 REQUEST MODEL: gemini-2.0-flash-exp")
                 print(f"🔍 PROMPT: {prompt}")
                 
-                # Make the API call with a randomly selected API key
-                url = f"{BASE_URL}?key={get_random_api_key()}"
+                # Get an API key from the key manager
+                api_key = get_api_key()
+
+                # Make the API call
+                url = f"{BASE_URL}?key={api_key}"
                 response = requests.post(
                     url, 
                     json=request_body,
                     headers={"Content-Type": "application/json"}
                 )
                 
-                # Handle errors
+                # Handle API errors with smarter key rotation
                 if response.status_code != 200:
-                    print(f"🔍 RESPONSE STATUS: {response.status_code}")
                     error_message = "Unknown error"
                     try:
                         error_data = response.json()
                         if 'error' in error_data and 'message' in error_data['error']:
                             error_message = error_data['error']['message']
+                            
+                            # Check for rate limiting errors
+                            if 'rate limit' in error_message.lower() or 'quota' in error_message.lower():
+                                # Mark this key as rate limited
+                                key_manager.mark_rate_limited(api_key)
+                                logger.warning(f"API key hit rate limit. Marked for cooldown.")
                     except:
                         error_message = f"API Error: {response.status_code}"
                     
@@ -339,22 +352,30 @@ def edit_image():
             print(f"🔍 PROMPT: {prompt}")
             print(f"🔍 WITH IMAGE: {len(image_data_b64) if image_data_b64 else 0} chars")
             
-            # Make the API call with a randomly selected API key
-            url = f"{BASE_URL}?key={get_random_api_key()}"
+            # Get an API key from the key manager
+            api_key = get_api_key()
+
+            # Make the API call
+            url = f"{BASE_URL}?key={api_key}"
             response = requests.post(
                 url, 
                 json=request_body,
                 headers={"Content-Type": "application/json"}
             )
             
-            # Handle errors
+            # Handle API errors with smarter key rotation
             if response.status_code != 200:
-                print(f"🔍 RESPONSE STATUS: {response.status_code}")
                 error_message = "Unknown error"
                 try:
                     error_data = response.json()
                     if 'error' in error_data and 'message' in error_data['error']:
                         error_message = error_data['error']['message']
+                        
+                        # Check for rate limiting errors
+                        if 'rate limit' in error_message.lower() or 'quota' in error_message.lower():
+                            # Mark this key as rate limited
+                            key_manager.mark_rate_limited(api_key)
+                            logger.warning(f"API key hit rate limit. Marked for cooldown.")
                 except:
                     error_message = f"API Error: {response.status_code}"
                 
