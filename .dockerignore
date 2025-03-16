@@ -1,0 +1,56 @@
+# Frontend directory (not needed for backend build)
+ai-photo-editor-frontend/
+
+# Storage directory (mounted as volume, not needed in image)
+storage/
+
+# Version control
+.git/
+.gitignore
+
+# Environment files (keep .env.example as documentation)
+.env
+.env.copy
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Editor/IDE configs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Scripts not needed in container
+install.sh
+deploy.sh
+update.sh
+troubleshoot.sh
+setup-github.sh
+
+# Docker files not needed in build
+docker-compose*.yml
+docker-compose*.yml.bak
+
+# Documentation (not needed in container)
+README.md
+README.user.md
+
+# Local development files
+*.log
+*.bak

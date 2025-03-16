@@ -7,7 +7,7 @@ echo "==============================="
 
 # Configuration
 DOCKER_USERNAME="jay2323"
-VERSION=$(date +"%Y%m%d.%H%M")
+VERSION="latest"
 BACKEND_DIR="."
 FRONTEND_DIR="./ai-photo-editor-frontend"
 

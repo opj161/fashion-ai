@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Version control
+.git/
+.gitignore
+
+# Environment files (keep .env.example for documentation)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor/IDE configs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+/coverage
+.nyc_output
+
+# Common misc files
+*.log
+.DS_Store
+Thumbs.db
+
+# DO NOT ignore essential files
+# !package.json
+# !package-lock.json
+# !yarn.lock
+# !nginx.conf
+# !docker-entrypoint.sh
