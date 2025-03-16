@@ -86,13 +86,6 @@ function GeneratedImageView({ image, metadata }) {
             Copy Prompt
           </button>
         </div>
-        
-        {/* Template info */}
-        {metadata?.template && (
-          <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-            Template: {metadata.template}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -1,119 +1,92 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-function ComparisonSlider({ beforeImage, afterImage, className }) {
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
+function ComparisonSlider({ beforeImage, afterImage, className = '' }) {
+  const [position, setPosition] = useState(50);
+  const [dragging, setDragging] = useState(false);
   const containerRef = useRef(null);
 
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const handleMove = (e) => {
+    if (!dragging) return;
+    
+    const container = containerRef.current;
+    if (!container) return;
+    
+    // Get position for both mouse and touch events
+    const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+    if (clientX === null) return;
+    
+    const rect = container.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pos = (x / rect.width) * 100;
+    
+    // Constrain to 1-99% to avoid complete overlay
+    const constrainedPos = Math.max(1, Math.min(99, pos));
+    setPosition(constrainedPos);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging || !containerRef.current) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const position = (x / rect.width) * 100;
-    
-    // Clamp between 0 and 100
-    const clampedPosition = Math.max(0, Math.min(100, position));
-    setSliderPosition(clampedPosition);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging || !containerRef.current) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const position = (x / rect.width) * 100;
-    
-    // Clamp between 0 and 100
-    const clampedPosition = Math.max(0, Math.min(100, position));
-    setSliderPosition(clampedPosition);
-  };
-
+  const handleMouseDown = () => setDragging(true);
+  const handleMouseUp = () => setDragging(false);
+  
+  // Add and remove event listeners
   useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
+    if (dragging) {
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('touchmove', handleMove);
       window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleTouchMove);
       window.addEventListener('touchend', handleMouseUp);
-      
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-        window.removeEventListener('touchmove', handleTouchMove);
-        window.removeEventListener('touchend', handleMouseUp);
-      };
     }
-  }, [isDragging]); // eslint-disable-line react-hooks/exhaustive-deps
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [dragging]);
 
   return (
     <div 
-      ref={containerRef} 
-      className={`relative select-none overflow-hidden ${className || ''}`}
-      style={{ height: '400px' }}
+      ref={containerRef}
+      className={`relative cursor-col-resize select-none overflow-hidden ${className}`}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleMouseDown}
     >
-      {/* Before image (full width) */}
-      <div className="absolute inset-0">
-        <img 
-          src={`data:image/jpeg;base64,${beforeImage}`} 
-          alt="Before" 
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* After image (clipped) */}
-      <div 
-        className="absolute inset-0"
-        style={{ 
-          clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` 
-        }}
-      >
+      {/* First (After) image */}
+      <div className="w-full">
         <img 
           src={`data:image/jpeg;base64,${afterImage}`} 
           alt="After" 
-          className="w-full h-full object-cover"
+          className="w-full h-auto select-none"
         />
       </div>
-
-      {/* Slider control */}
+      
+      {/* Second (Before) image as overlay */}
       <div 
-        className="absolute inset-y-0 z-10"
-        style={{ left: `${sliderPosition}%` }}
+        className="absolute top-0 left-0 h-full overflow-hidden"
+        style={{ width: `${position}%` }}
       >
-        {/* Vertical line */}
-        <div className="absolute inset-y-0 w-0.5 bg-white"></div>
-        
-        {/* Drag handle */}
-        <div 
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-white shadow-md flex items-center justify-center cursor-grab"
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleMouseDown}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-        >
-          {/* Arrow icons */}
-          <div className="flex">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-800 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-800 -mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
+        <img 
+          src={`data:image/jpeg;base64,${beforeImage}`} 
+          alt="Before" 
+          className="w-auto h-full object-cover object-left"
+          style={{ 
+            width: `${100 / (position / 100)}%`, // Scale the image to maintain proportion
+            maxWidth: 'none'
+          }}
+        />
+      </div>
+      
+      {/* Slider handle */}
+      <div 
+        className="absolute top-0 bottom-0 w-1 bg-white cursor-col-resize"
+        style={{ left: `calc(${position}% - 0.5px)` }}
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M11.5 15a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-1 0v14a.5.5 0 0 0 .5.5zm-3-14a.5.5 0 0 0-1 0v14a.5.5 0 0 0 1 0V1zm-5 14a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-1 0v14a.5.5 0 0 0 .5.5z"/>
+          </svg>
         </div>
       </div>
-
-      {/* Labels */}
-      <div className="absolute bottom-2 left-2 bg-black/40 text-white text-xs px-2 py-1 rounded">Before</div>
-      <div className="absolute bottom-2 right-2 bg-black/40 text-white text-xs px-2 py-1 rounded">After</div>
     </div>
   );
 }
