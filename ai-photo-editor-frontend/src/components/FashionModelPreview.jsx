@@ -34,9 +34,27 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [customPrompt, setCustomPrompt] = useState('');
   const [isUsingCustomPrompt, setIsUsingCustomPrompt] = useState(false);
   
-  // Create wrapped state setters to track user modifications
+  // Replace the trackChange function with this implementation
   const trackChange = (option, value, setter) => {
-    setter(value);
+    // If a setter function is provided, use it
+    if (typeof setter === 'function') {
+      setter(value);
+    } else {
+      // Otherwise, use the appropriate setter based on option name
+      switch(option) {
+        case 'bodySize': setBodySize(value); break;
+        case 'height': setHeight(value); break;
+        case 'bodyType': setBodyType(value); break;
+        case 'age': setAge(value); break;
+        case 'ethnicity': setEthnicity(value); break;
+        case 'background': setBackground(value); break;
+        case 'pose': setPose(value); break;
+        case 'lens': setLens(value); break;
+        default: console.warn(`Unknown option: ${option}`);
+      }
+    }
+    
+    // Mark this option as modified by the user
     setModifiedOptions(prev => ({...prev, [option]: true}));
   };
   
