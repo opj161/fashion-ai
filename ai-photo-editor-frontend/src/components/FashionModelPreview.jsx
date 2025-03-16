@@ -14,44 +14,43 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [modifiedOptions, setModifiedOptions] = useState({});
   
   // Enhanced model description options
-  const [gender, setGender] = useState('female');
-  const [bodyType, setBodyType] = useState('average');
-  const [bodySize, setBodySize] = useState('medium');
-  const [height, setHeight] = useState('average');
-  const [age, setAge] = useState('young-adult');
-  const [ethnicity, setEthnicity] = useState('diverse');
+  const [gender, setGender] = useState('female'); // Essential, always included
   
-  // Enhanced setting options
+  // Optional attributes that can use "default" option
+  const [bodyType, setBodyType] = useState('default');
+  const [bodySize, setBodySize] = useState('default');
+  const [height, setHeight] = useState('default');
+  const [age, setAge] = useState('default');
+  const [ethnicity, setEthnicity] = useState('default');
+  
+  // Semi-essential settings with specific defaults
   const [background, setBackground] = useState('studio-white');
   const [pose, setPose] = useState('natural');
   
-  // Camera and lens options
-  const [cameraAngle, setCameraAngle] = useState('eye-level');
-  const [lens, setLens] = useState('standard');
+  // Optional technical settings
+  const [cameraAngle, setCameraAngle] = useState('default');
+  const [lens, setLens] = useState('default');
   
   // Prompt preview and editing
   const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [isUsingCustomPrompt, setIsUsingCustomPrompt] = useState(false);
   
-  // Replace the trackChange function with this implementation
-  const trackChange = (option, value, setter) => {
-    // If a setter function is provided, use it
-    if (typeof setter === 'function') {
-      setter(value);
-    } else {
-      // Otherwise, use the appropriate setter based on option name
-      switch(option) {
-        case 'bodySize': setBodySize(value); break;
-        case 'height': setHeight(value); break;
-        case 'bodyType': setBodyType(value); break;
-        case 'age': setAge(value); break;
-        case 'ethnicity': setEthnicity(value); break;
-        case 'background': setBackground(value); break;
-        case 'pose': setPose(value); break;
-        case 'lens': setLens(value); break;
-        default: console.warn(`Unknown option: ${option}`);
-      }
+  // Track changes function
+  const trackChange = (option, value) => {
+    // Update the corresponding state variable
+    switch(option) {
+      case 'gender': setGender(value); break;
+      case 'bodyType': setBodyType(value); break;
+      case 'bodySize': setBodySize(value); break;
+      case 'height': setHeight(value); break;
+      case 'age': setAge(value); break;
+      case 'ethnicity': setEthnicity(value); break;
+      case 'background': setBackground(value); break;
+      case 'pose': setPose(value); break;
+      case 'cameraAngle': setCameraAngle(value); break;
+      case 'lens': setLens(value); break;
+      default: console.warn(`Unknown option: ${option}`);
     }
     
     // Mark this option as modified by the user
@@ -60,6 +59,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   
   // Model attribute options
   const bodyTypeOptions = [
+    { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing' },
     { value: 'hourglass', label: 'Hourglass', description: 'Balanced top and bottom with defined waist' },
     { value: 'athletic', label: 'Athletic', description: 'Toned with broader shoulders' },
     { value: 'pear', label: 'Pear', description: 'Narrower shoulders, wider hips' },
@@ -69,6 +69,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   ];
   
   const bodySizeOptions = [
+    { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing' },
     { value: 'petite', label: 'Petite', description: 'Smaller frame' },
     { value: 'slim', label: 'Slim', description: 'Lean build' },
     { value: 'medium', label: 'Medium', description: 'Average build' },
@@ -77,12 +78,14 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   ];
   
   const heightOptions = [
+    { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing' },
     { value: 'petite', label: 'Short', description: 'Below average height' },
     { value: 'average', label: 'Average', description: 'Standard height' },
     { value: 'tall', label: 'Tall', description: 'Above average height' },
   ];
   
   const ageOptions = [
+    { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine based on clothing style' },
     { value: 'young-adult', label: 'Young Adult', description: '20s' },
     { value: 'adult', label: 'Adult', description: '30s-40s' },
     { value: 'mature', label: 'Mature', description: '50s-60s' },
@@ -90,6 +93,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   ];
   
   const ethnicityOptions = [
+    { value: 'default', label: 'Default (unspecified)', description: 'Let AI determine appropriate diversity' },
     { value: 'diverse', label: 'Diverse', description: 'Unspecified/mixed' },
     { value: 'caucasian', label: 'Caucasian', description: 'Fair/light skin tones' },
     { value: 'black', label: 'Black', description: 'Dark skin tones' },
@@ -113,22 +117,25 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   ];
   
   const poseOptions = [
+    { value: 'default', label: 'Default (natural)', description: 'Let AI choose appropriate pose' },
     { value: 'natural', label: 'Natural', description: 'Relaxed, everyday stance' },
     { value: 'professional', label: 'Professional', description: 'Formal, business-like' },
     { value: 'editorial', label: 'Editorial', description: 'Fashion magazine style' },
     { value: 'active', label: 'Active', description: 'In motion, dynamic' },
   ];
   
-  // Camera angle options
+  // Camera angle options with default
   const cameraAngleOptions = [
+    { value: 'default', label: 'Default', description: 'Let AI choose the best angle', icon: '🎯' },
     { value: 'eye-level', label: 'Eye Level', description: 'Standard direct view', icon: '👁️' },
     { value: 'high-angle', label: 'High Angle', description: 'Looking down at subject', icon: '⬇️' },
     { value: 'low-angle', label: 'Low Angle', description: 'Looking up at subject', icon: '⬆️' },
     { value: 'three-quarter', label: '3/4 View', description: 'Angled perspective', icon: '↗️' },
   ];
   
-  // Lens options
+  // Lens options with default
   const lensOptions = [
+    { value: 'default', label: 'Default (optimal)', description: 'Let AI choose the best lens settings' },
     { value: 'portrait', label: 'Portrait (85mm f/1.8)', description: 'Blurred background, flattering perspective' },
     { value: 'standard', label: 'Standard (50mm f/5.6)', description: 'Natural perspective, medium focus depth' },
     { value: 'wide', label: 'Wide (35mm f/8)', description: 'Sharp throughout, shows environment' },
@@ -156,6 +163,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   
   const getPoseDescription = () => {
     switch (pose) {
+      case 'default': return '';
       case 'natural': return 'standing in a relaxed, natural pose';
       case 'professional': return 'standing in a confident, professional stance';
       case 'editorial': return 'posed in a stylish, editorial fashion position';
@@ -166,6 +174,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   
   const getCameraDescription = () => {
     switch (cameraAngle) {
+      case 'default': return 'optimal';
       case 'eye-level': return 'direct eye-level';
       case 'high-angle': return 'slightly elevated';
       case 'low-angle': return 'slightly low';
@@ -176,6 +185,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   
   const getLensDescription = () => {
     switch (lens) {
+      case 'default': return 'professional camera equipment';
       case 'portrait': return 'an 85mm portrait lens at f/1.8 with pleasing background blur';
       case 'standard': return 'a 50mm standard lens at f/5.6 with natural perspective';
       case 'wide': return 'a 35mm wide lens at f/8 with extended depth of field';
@@ -184,37 +194,36 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     }
   };
   
-  // Optimized prompt builder that only includes user-modified options
+  // Structured prompt builder using sections
   const buildEnhancedPrompt = () => {
-    // Always include gender (essential)
-    const genderDesc = gender;
-    
-    // Build subject section with only modified attributes
+    // Subject section - only include non-default attributes
     let subjectAttributes = [];
     
-    // Only include modified characteristics
-    if (modifiedOptions.bodySize) {
-      const bodySizeLabel = bodySizeOptions.find(o => o.value === bodySize)?.label || 'medium';
+    if (bodySize !== 'default') {
+      const bodySizeLabel = bodySizeOptions.find(o => o.value === bodySize)?.label || '';
       subjectAttributes.push(bodySizeLabel);
     }
     
-    if (modifiedOptions.height) {
-      const heightLabel = heightOptions.find(o => o.value === height)?.label || 'average height';
+    if (height !== 'default') {
+      const heightLabel = heightOptions.find(o => o.value === height)?.label || '';
       subjectAttributes.push(heightLabel);
     }
     
-    if (modifiedOptions.ethnicity && ethnicity !== 'diverse') {
-      const ethnicityLabel = ethnicityOptions.find(o => o.value === ethnicity)?.label || 'diverse';
+    if (ethnicity !== 'default' && ethnicity !== 'diverse') {
+      const ethnicityLabel = ethnicityOptions.find(o => o.value === ethnicity)?.label || '';
       subjectAttributes.push(ethnicityLabel);
     }
     
-    if (modifiedOptions.bodyType && bodyType !== 'average') {
-      const bodyTypeLabel = bodyTypeOptions.find(o => o.value === bodyType)?.label || 'balanced';
-      subjectAttributes.push(`with ${bodyTypeLabel} body proportions`);
+    if (bodyType !== 'default') {
+      const bodyTypeLabel = bodyTypeOptions.find(o => o.value === bodyType)?.label || '';
+      // Add "with X body proportions" phrasing for body type
+      if (!bodyTypeLabel.includes('Default')) {
+        subjectAttributes.push(`with ${bodyTypeLabel} body proportions`);
+      }
     }
     
-    if (modifiedOptions.age && age !== 'young-adult') {
-      const ageLabel = ageOptions.find(o => o.value === age)?.label || 'adult';
+    if (age !== 'default') {
+      const ageLabel = ageOptions.find(o => o.value === age)?.label || '';
       subjectAttributes.push(`in the ${ageLabel} age range`);
     }
     
@@ -224,33 +233,29 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       : '';
       
     // Always include gender and clothing
-    const subjectSection = `a ${attributeString}${genderDesc} fashion model ${modifiedOptions.pose ? getPoseDescription() : ''} wearing this clothing item`;
+    const subjectSection = `a ${attributeString}${gender} fashion model ${pose !== 'default' ? getPoseDescription() : ''} wearing this clothing item`;
     
-    // Setting section - only if background is modified
-    const settingSection = modifiedOptions.background 
-      ? getBackgroundDescription()
-      : "Clean, professional studio background";
+    // Setting section - always include background
+    const settingSection = getBackgroundDescription();
     
     // Style section - always include this for quality results
     const styleSection = "The model should look authentic and relatable with a natural expression. The clothing must fit perfectly and be the main visual focus of the image.";
     
-    // Technical section - only include if camera/lens settings modified
+    // Technical section - only include specific camera/lens settings if not default
     let technicalSection = "Professional fashion photography lighting with perfect exposure and color accuracy.";
     
-    if (modifiedOptions.cameraAngle || modifiedOptions.lens) {
-      let techDetails = [];
-      
-      if (modifiedOptions.lens) {
-        techDetails.push(`Shot with ${getLensDescription()}`);
-      }
-      
-      if (modifiedOptions.cameraAngle) {
-        techDetails.push(`from a ${getCameraDescription()} perspective`);
-      }
-      
-      if (techDetails.length > 0) {
-        technicalSection = `${techDetails.join(', ')}. ${technicalSection}`;
-      }
+    let techDetails = [];
+    
+    if (lens !== 'default') {
+      techDetails.push(`Shot with ${getLensDescription()}`);
+    }
+    
+    if (cameraAngle !== 'default') {
+      techDetails.push(`from a ${getCameraDescription()} perspective`);
+    }
+    
+    if (techDetails.length > 0) {
+      technicalSection = `${techDetails.join(', ')}. ${technicalSection}`;
     }
     
     // Complete structured prompt
@@ -262,7 +267,7 @@ Style: ${styleSection}
 
 Technical details: ${technicalSection}`;
   };
-
+  
   // Toggle prompt editor visibility
   const togglePromptEditor = () => {
     if (!showPromptEditor) {
@@ -271,7 +276,7 @@ Technical details: ${technicalSection}`;
     }
     setShowPromptEditor(!showPromptEditor);
   };
-
+  
   // Handle image generation
   const handleGenerate = async () => {
     setLoading(true);
@@ -284,17 +289,17 @@ Technical details: ${technicalSection}`;
         onImageGenerated(data.imageData, {
           prompt,
           gender,
-          bodyType: modifiedOptions.bodyType ? bodyType : null,
-          bodySize: modifiedOptions.bodySize ? bodySize : null,
-          height: modifiedOptions.height ? height : null,
-          age: modifiedOptions.age ? age : null,
-          ethnicity: modifiedOptions.ethnicity ? ethnicity : null,
-          background: modifiedOptions.background ? background : null,
-          pose: modifiedOptions.pose ? pose : null,
-          cameraAngle: modifiedOptions.cameraAngle ? cameraAngle : null,
-          lens: modifiedOptions.lens ? lens : null,
-          isCustomPrompt: isUsingCustomPrompt,
-          modifiedOptions
+          // Only include non-default values in metadata
+          bodyType: bodyType !== 'default' ? bodyType : null,
+          bodySize: bodySize !== 'default' ? bodySize : null,
+          height: height !== 'default' ? height : null,
+          age: age !== 'default' ? age : null,
+          ethnicity: ethnicity !== 'default' ? ethnicity : null,
+          background, // Always include these essential settings
+          pose: pose !== 'default' ? pose : null,
+          cameraAngle: cameraAngle !== 'default' ? cameraAngle : null,
+          lens: lens !== 'default' ? lens : null,
+          isCustomPrompt: isUsingCustomPrompt
         });
         toast.success('Fashion image generated successfully!');
       } else {
@@ -307,8 +312,8 @@ Technical details: ${technicalSection}`;
       setLoading(false);
     }
   };
-
-  // Components with proper dark mode support
+  
+  // Tab Button component
   const TabButton = ({ isActive, onClick, icon, label }) => (
     <button
       onClick={onClick}
@@ -322,7 +327,7 @@ Technical details: ${technicalSection}`;
       <span>{label}</span>
     </button>
   );
-
+  
   // Helper component for attribute selectors with descriptions
   const AttributeSelect = ({ label, stateKey, value, onChange, options, className = "" }) => (
     <div className={className}>
@@ -332,7 +337,11 @@ Technical details: ${technicalSection}`;
       <select
         value={value}
         onChange={(e) => onChange(stateKey, e.target.value)}
-        className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 px-3 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600"
+        className={`w-full rounded-md border ${
+          value === 'default' 
+            ? 'border-dashed border-gray-300 dark:border-gray-600' 
+            : 'border-gray-300 dark:border-gray-700'
+        } bg-white dark:bg-gray-800 py-2 px-3 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600`}
       >
         {options.map(option => (
           <option key={option.value} value={option.value} title={option.description}>
@@ -340,41 +349,19 @@ Technical details: ${technicalSection}`;
           </option>
         ))}
       </select>
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        {options.find(o => o.value === value)?.description}
-      </p>
-    </div>
-  );
-  
-  // Component for camera angle selection
-  const CameraAngleSelect = () => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Camera Angle
-      </label>
-      <div className="grid grid-cols-4 gap-2">
-        {cameraAngleOptions.map(option => (
-          <button
-            key={option.value}
-            onClick={() => trackChange('cameraAngle', option.value, setCameraAngle)}
-            className={`p-2 border rounded text-center ${
-              cameraAngle === option.value 
-                ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400 text-primary-700 dark:text-primary-300' 
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-            title={option.description}
-          >
-            <div className="text-lg mb-1">{option.icon}</div>
-            <div className="text-xs">{option.label}</div>
-          </button>
-        ))}
+      <div className="mt-1 text-xs">
+        {value === 'default' ? (
+          <span className="text-gray-500 dark:text-gray-400 italic">
+            {options.find(o => o.value === value)?.description}
+          </span>
+        ) : (
+          <span className="text-gray-500 dark:text-gray-400">
+            {options.find(o => o.value === value)?.description}
+          </span>
+        )}
       </div>
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        {cameraAngleOptions.find(o => o.value === cameraAngle)?.description}
-      </p>
     </div>
   );
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -464,19 +451,25 @@ Technical details: ${technicalSection}`;
                     <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Model Gender</h3>
                     <div className="flex flex-wrap gap-4">
                       <button
-                        onClick={() => setGender('female')}
+                        onClick={() => {
+                          setGender('female');
+                          trackChange('gender', 'female');
+                        }}
                         className={`flex-1 py-3 px-4 rounded-lg border ${gender === 'female' 
-                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400 text-gray-800 dark:text-gray-100' 
-                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'} transition-colors`}
+                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
+                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
                       >
                         <div className="text-2xl mb-1">👩</div>
                         <div className="font-medium">Female</div>
                       </button>
                       <button
-                        onClick={() => setGender('male')}
+                        onClick={() => {
+                          setGender('male');
+                          trackChange('gender', 'male');
+                        }}
                         className={`flex-1 py-3 px-4 rounded-lg border ${gender === 'male' 
-                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400 text-gray-800 dark:text-gray-100' 
-                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'} transition-colors`}
+                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400' 
+                          : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700'} transition-colors`}
                       >
                         <div className="text-2xl mb-1">👨</div>
                         <div className="font-medium">Male</div>
@@ -506,8 +499,7 @@ Technical details: ${technicalSection}`;
                     
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
                       <p className="text-xs text-blue-600 dark:text-blue-300">
-                        <span className="font-medium">Tip:</span> Customize only what matters for your clothing item. 
-                        Default settings work well for most products.
+                        <span className="font-medium">Tip:</span> "Default" options won't be included in the prompt - the AI will decide based on context. Select specific values only when important for your item.
                       </p>
                     </div>
                   </div>
@@ -541,6 +533,12 @@ Technical details: ${technicalSection}`;
                       options={ethnicityOptions}
                     />
                   </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
+                    <p className="text-xs text-blue-600 dark:text-blue-300">
+                      <span className="font-medium">Tip:</span> "Default" options won't be included in the prompt - the AI will decide based on context. Select specific values only when important for your item.
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -564,6 +562,12 @@ Technical details: ${technicalSection}`;
                       options={poseOptions}
                     />
                   </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
+                    <p className="text-xs text-blue-600 dark:text-blue-300">
+                      <span className="font-medium">Note:</span> Background and pose greatly impact how your clothing item appears. Choose settings that highlight your product best.
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -572,7 +576,40 @@ Technical details: ${technicalSection}`;
                 <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
                   <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Photography Settings</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <CameraAngleSelect />
+                    {/* Camera angle selector with visual buttons */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Camera Angle
+                      </label>
+                      <div className="grid grid-cols-5 gap-2"> {/* Changed from 4 to 5 columns to fit default */}
+                        {cameraAngleOptions.map(option => (
+                          <button
+                            key={option.value}
+                            onClick={() => trackChange('cameraAngle', option.value, setCameraAngle)}
+                            className={`p-2 border ${
+                              option.value === 'default' ? 'border-dashed' : ''
+                            } rounded text-center ${
+                              cameraAngle === option.value 
+                                ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400 text-primary-700 dark:text-primary-300' 
+                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                            }`}
+                            title={option.description}
+                          >
+                            <div className="text-lg mb-1">{option.icon}</div>
+                            <div className="text-xs">{option.label}</div>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {cameraAngle === 'default' ? (
+                          <span className="italic">{cameraAngleOptions.find(o => o.value === cameraAngle)?.description}</span>
+                        ) : (
+                          cameraAngleOptions.find(o => o.value === cameraAngle)?.description
+                        )}
+                      </p>
+                    </div>
+                    
+                    {/* Lens options */}
                     <AttributeSelect
                       label="Lens & Depth of Field"
                       stateKey="lens"
@@ -580,6 +617,12 @@ Technical details: ${technicalSection}`;
                       onChange={trackChange}
                       options={lensOptions}
                     />
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
+                    <p className="text-xs text-blue-600 dark:text-blue-300">
+                      <span className="font-medium">Tip:</span> "Default" lens and camera settings work well for most items. Adjust these only for specific visual effects.
+                    </p>
                   </div>
                 </div>
               )}
@@ -639,6 +682,12 @@ Technical details: ${technicalSection}`;
                       <label htmlFor="useCustomPrompt" className="text-sm text-gray-700 dark:text-gray-300">
                         Use edited prompt instead of auto-generated
                       </label>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-md">
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        <span className="font-medium">Advanced users only:</span> Edit the prompt directly to fine-tune the generation. Be sure to maintain the key instruction "CREATE A PHOTOREALISTIC IMAGE" at the beginning.
+                      </p>
                     </div>
                   </div>
                 </div>
