@@ -53,6 +53,8 @@ curl -s -o docker-compose.prod.yml https://raw.githubusercontent.com/jayrom23/fa
 
 # Start the application
 echo "Starting AI Fashion Model app..."
+docker-compose -f docker-compose.prod.yml pull
+docker-compose -f docker-compose.prod.yml down -v 2>/dev/null || true
 docker-compose -f docker-compose.prod.yml up -d
 
 # Check if services are running

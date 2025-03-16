@@ -6,11 +6,11 @@ services:
     container_name: fashion-ai-backend
     restart: unless-stopped
     environment:
-      - GEMINI_API_KEY_01=${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      # Fix: Change to match your .env file variable name
+      - GEMINI_API_KEY_01=${GEMINI_API_KEY}
       - HOST=0.0.0.0
-      - PORT=${BACKEND_PORT:-5002}
+      - PORT=5002
       - DEBUG=${DEBUG:-false}
-      # Fix: Add multiple CORS origins including internal Docker network references
       - ALLOWED_ORIGINS=http://frontend,http://localhost:${FRONTEND_PORT:-8080},http://${HOST_IP:-localhost}:${FRONTEND_PORT:-8080}
     ports:
       - "${BACKEND_PORT:-5002}:${BACKEND_PORT:-5002}"
@@ -21,7 +21,6 @@ services:
     image: jay2323/fashion-ai-frontend:latest
     container_name: fashion-ai-frontend
     restart: unless-stopped
-    # Fix: Use environment variable to properly configure API URL
     environment:
       - NGINX_ENV_API_URL=http://backend:5002
     ports:
