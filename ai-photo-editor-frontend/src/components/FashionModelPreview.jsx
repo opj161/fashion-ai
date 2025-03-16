@@ -19,6 +19,15 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [background, setBackground] = useState('studio-white');
   const [pose, setPose] = useState('natural');
   
+  // New camera and lens options
+  const [cameraAngle, setCameraAngle] = useState('eye-level');
+  const [lens, setLens] = useState('standard');
+  
+  // Prompt preview and editing
+  const [showPromptEditor, setShowPromptEditor] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [isUsingCustomPrompt, setIsUsingCustomPrompt] = useState(false);
+  
   // Model attribute options
   const bodyTypeOptions = [
     { value: 'hourglass', label: 'Hourglass', description: 'Balanced top and bottom with defined waist' },
@@ -38,7 +47,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   ];
   
   const heightOptions = [
-    { value: 'petite', label: 'Petite', description: 'Below average height' },
+    { value: 'petite', label: 'Short', description: 'Below average height' },
     { value: 'average', label: 'Average', description: 'Standard height' },
     { value: 'tall', label: 'Tall', description: 'Above average height' },
   ];
@@ -79,62 +88,117 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'editorial', label: 'Editorial', description: 'Fashion magazine style' },
     { value: 'active', label: 'Active', description: 'In motion, dynamic' },
   ];
+  
+  // New camera angle options
+  const cameraAngleOptions = [
+    { value: 'eye-level', label: 'Eye Level', description: 'Standard direct view', icon: '👁️' },
+    { value: 'high-angle', label: 'High Angle', description: 'Looking down at subject', icon: '⬇️' },
+    { value: 'low-angle', label: 'Low Angle', description: 'Looking up at subject', icon: '⬆️' },
+    { value: 'three-quarter', label: '3/4 View', description: 'Angled perspective', icon: '↗️' },
+  ];
+  
+  // New lens options
+  const lensOptions = [
+    { value: 'portrait', label: 'Portrait (85mm f/1.8)', description: 'Blurred background, flattering perspective' },
+    { value: 'standard', label: 'Standard (50mm f/5.6)', description: 'Natural perspective, medium focus depth' },
+    { value: 'wide', label: 'Wide (35mm f/8)', description: 'Sharp throughout, shows environment' },
+    { value: 'telephoto', label: 'Telephoto (135mm f/2.8)', description: 'Compressed perspective, isolated subject' },
+  ];
 
-  // Build enhanced descriptive prompt
+  // Helper functions for structured prompt
+  const getBackgroundDescription = () => {
+    if (background.startsWith('studio')) {
+      return `Clean, professional ${background === 'studio-gradient' ? 'gradient' : 'white'} studio background with subtle shadows`;
+    } else if (background.startsWith('in-store')) {
+      return 'Tasteful retail environment with appropriate fixtures and displays';
+    } else if (background.startsWith('lifestyle')) {
+      const setting = background.split('-')[1];
+      return `Lifestyle ${setting} setting with tasteful, uncluttered ${setting === 'home' ? 'interior' : 'office'} design`;
+    } else if (background.startsWith('outdoor')) {
+      const setting = background.split('-')[1];
+      return `Outdoor ${setting} setting with appropriate ${setting === 'urban' ? 'city architecture' : 'natural elements'}`;
+    } else if (background.startsWith('seasonal')) {
+      const season = background.split('-')[1];
+      return `Seasonal ${season} atmosphere with characteristic lighting and environment`;
+    }
+    return 'Clean, well-lit background';
+  };
+  
+  const getPoseDescription = () => {
+    switch (pose) {
+      case 'natural': return 'standing in a relaxed, natural pose';
+      case 'professional': return 'standing in a confident, professional stance';
+      case 'editorial': return 'posed in a stylish, editorial fashion position';
+      case 'active': return 'in a dynamic, engaging pose showing movement';
+      default: return 'in a natural, flattering position';
+    }
+  };
+  
+  const getCameraDescription = () => {
+    switch (cameraAngle) {
+      case 'eye-level': return 'direct eye-level';
+      case 'high-angle': return 'slightly elevated';
+      case 'low-angle': return 'slightly low';
+      case 'three-quarter': return 'three-quarter angled';
+      default: return 'balanced';
+    }
+  };
+  
+  const getLensDescription = () => {
+    switch (lens) {
+      case 'portrait': return 'an 85mm portrait lens at f/1.8 with pleasing background blur';
+      case 'standard': return 'a 50mm standard lens at f/5.6 with natural perspective';
+      case 'wide': return 'a 35mm wide lens at f/8 with extended depth of field';
+      case 'telephoto': return 'a 135mm telephoto lens at f/2.8 with compressed perspective';
+      default: return 'professional camera equipment';
+    }
+  };
+  
+  // Structured prompt builder using sections
   const buildEnhancedPrompt = () => {
-    // Get selected option labels for more descriptive language
+    // Subject section
     const bodyTypeLabel = bodyTypeOptions.find(o => o.value === bodyType)?.label || 'balanced';
     const bodySizeLabel = bodySizeOptions.find(o => o.value === bodySize)?.label || 'medium';
     const heightLabel = heightOptions.find(o => o.value === height)?.label || 'average height';
     const ageLabel = ageOptions.find(o => o.value === age)?.label || 'adult';
     const ethnicityLabel = ethnicityOptions.find(o => o.value === ethnicity)?.label || 'diverse';
-    const backgroundLabel = backgroundOptions.find(o => o.value === background)?.label || 'Studio White';
-    const poseLabel = poseOptions.find(o => o.value === pose)?.label || 'natural';
     
-    // Background description based on selection
-    const getBackgroundDescription = () => {
-      if (background.startsWith('studio')) {
-        return `Clean, professional ${background === 'studio-gradient' ? 'gradient' : 'white'} studio background with subtle shadows`;
-      } else if (background.startsWith('in-store')) {
-        return 'Tasteful retail environment with appropriate fixtures and displays';
-      } else if (background.startsWith('lifestyle')) {
-        const setting = background.split('-')[1];
-        return `Lifestyle ${setting} setting with tasteful, uncluttered ${setting === 'home' ? 'interior' : 'office'} design`;
-      } else if (background.startsWith('outdoor')) {
-        const setting = background.split('-')[1];
-        return `Outdoor ${setting} setting with appropriate ${setting === 'urban' ? 'city architecture' : 'natural elements'}`;
-      } else if (background.startsWith('seasonal')) {
-        const season = background.split('-')[1];
-        return `Seasonal ${season} atmosphere with characteristic lighting and environment`;
-      }
-      return 'Clean, well-lit background';
-    };
+    const subjectSection = `a ${bodySizeLabel}, ${heightLabel} ${ethnicityLabel} ${gender} fashion model with ${bodyTypeLabel} body proportions, in the ${ageLabel} age range, ${getPoseDescription()} and wearing this clothing item`;
     
-    // Pose description
-    const getPoseDescription = () => {
-      switch (pose) {
-        case 'natural': return 'standing in a relaxed, natural pose';
-        case 'professional': return 'standing in a confident, professional stance';
-        case 'editorial': return 'posed in a stylish, editorial fashion position';
-        case 'active': return 'in a dynamic, engaging pose showing movement';
-        default: return 'in a natural, flattering position';
-      }
-    };
+    // Setting section
+    const settingSection = getBackgroundDescription();
     
-    // Build comprehensive, descriptive prompt
-    return `CREATE A PHOTOREALISTIC IMAGE of a ${bodySizeLabel}, ${heightLabel} ${ethnicityLabel} ${gender} fashion model with ${bodyTypeLabel} body proportions, in the ${ageLabel} age range, ${getPoseDescription()} and wearing this clothing item.
+    // Style section
+    const styleSection = `The model should look authentic and relatable with a natural expression. The clothing must fit perfectly and be the main visual focus of the image, showcased from the most flattering angle with professional styling`;
+    
+    // Technical section
+    const technicalSection = `Shot with ${getLensDescription()}, from a ${getCameraDescription()} perspective. Professional fashion photography lighting with perfect exposure and color accuracy. The image should have commercial-quality composition and styling`;
+    
+    // Complete structured prompt
+    return `CREATE A PHOTOREALISTIC IMAGE of ${subjectSection}
 
-Background: ${getBackgroundDescription()}.
+Setting: ${settingSection}
 
-Photography details: Professional fashion photography with excellent composition, perfect lighting to highlight the garment's details, texture, and color. Crisp focus on the model and clothing with subtle depth of field.
+Style: ${styleSection}
 
-The model should look authentic and relatable with a natural expression. The clothing must fit perfectly and be the main visual focus of the image, showcased from the most flattering angle with professional styling.`;
+Technical details: ${technicalSection}`;
   };
 
+  // Toggle prompt editor visibility
+  const togglePromptEditor = () => {
+    if (!showPromptEditor) {
+      // When opening editor, initialize with current auto-generated prompt
+      setCustomPrompt(buildEnhancedPrompt());
+    }
+    setShowPromptEditor(!showPromptEditor);
+  };
+
+  // Handle image generation
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const prompt = buildEnhancedPrompt();
+      // Use either custom or auto-generated prompt
+      const prompt = isUsingCustomPrompt ? customPrompt : buildEnhancedPrompt();
       const data = await api.editImage(prompt, clothingImage);
       
       if (data.imageData) {
@@ -147,7 +211,10 @@ The model should look authentic and relatable with a natural expression. The clo
           age,
           ethnicity,
           background,
-          pose
+          pose,
+          cameraAngle,
+          lens,
+          isCustomPrompt: isUsingCustomPrompt
         });
         toast.success('Fashion image generated successfully!');
       } else {
@@ -180,6 +247,35 @@ The model should look authentic and relatable with a natural expression. The clo
       </select>
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
         {options.find(o => o.value === value)?.description}
+      </p>
+    </div>
+  );
+  
+  // Component for camera angle selection
+  const CameraAngleSelect = () => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Camera Angle
+      </label>
+      <div className="grid grid-cols-4 gap-2">
+        {cameraAngleOptions.map(option => (
+          <button
+            key={option.value}
+            onClick={() => setCameraAngle(option.value)}
+            className={`p-2 border rounded text-center ${
+              cameraAngle === option.value 
+                ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500' 
+                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+            }`}
+            title={option.description}
+          >
+            <div className="text-lg mb-1">{option.icon}</div>
+            <div className="text-xs">{option.label}</div>
+          </button>
+        ))}
+      </div>
+      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {cameraAngleOptions.find(o => o.value === cameraAngle)?.description}
       </p>
     </div>
   );
@@ -315,6 +411,102 @@ The model should look authentic and relatable with a natural expression. The clo
                   options={poseOptions}
                 />
               </div>
+            </div>
+            
+            {/* Camera settings - NEW */}
+            <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
+              <h3 className="font-medium mb-4 text-gray-900 dark:text-gray-100">Photography Settings</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Camera angle selector with visual buttons */}
+                <CameraAngleSelect />
+                
+                {/* Lens options */}
+                <AttributeSelect
+                  label="Lens & Depth of Field"
+                  value={lens}
+                  onChange={setLens}
+                  options={lensOptions}
+                />
+              </div>
+            </div>
+            
+            {/* Prompt Preview & Editor - NEW */}
+            <div className="border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200 overflow-hidden">
+              <button 
+                onClick={togglePromptEditor}
+                className="w-full p-3 text-left flex justify-between items-center hover:bg-gray-100 dark:hover:bg-gray-700/30"
+              >
+                <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                  Advanced: View & Edit Prompt
+                </h3>
+                <svg 
+                  className={`h-5 w-5 transform transition-transform ${showPromptEditor ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showPromptEditor && (
+                <div className="p-4 border-t dark:border-gray-700">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {customPrompt.length} characters
+                      {customPrompt.length > 800 && 
+                        <span className="text-amber-600 dark:text-amber-400 ml-2">
+                          (Very long prompts may be truncated)
+                        </span>
+                      }
+                    </div>
+                    <div className="space-x-2">
+                      <button
+                        onClick={() => {
+                          setCustomPrompt(buildEnhancedPrompt());
+                          setIsUsingCustomPrompt(false);
+                        }}
+                        className="text-xs py-1 px-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(customPrompt);
+                          toast.success('Prompt copied!');
+                        }}
+                        className="text-xs py-1 px-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <textarea
+                    value={customPrompt}
+                    onChange={(e) => {
+                      setCustomPrompt(e.target.value);
+                      setIsUsingCustomPrompt(true);
+                    }}
+                    className="w-full border rounded-md p-3 h-32 dark:bg-gray-800 dark:border-gray-600"
+                    placeholder="Edit the generation prompt..."
+                  />
+                  
+                  <div className="mt-2 flex items-center">
+                    <input
+                      type="checkbox"
+                      id="useCustomPrompt"
+                      checked={isUsingCustomPrompt}
+                      onChange={(e) => setIsUsingCustomPrompt(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label htmlFor="useCustomPrompt" className="text-sm text-gray-700 dark:text-gray-300">
+                      Use edited prompt instead of auto-generated
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Generate button */}
