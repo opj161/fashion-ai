@@ -54,34 +54,22 @@ def save_image(image_data_base64, metadata=None):
             }
             json.dump(full_metadata, f, indent=2)
     
-    print(f"Saved image {image_id}")
+    print(f"Saved image {image_id} to {image_path}")
     return image_id
 
 def get_image(image_id):
-    """
-    Retrieve an image from storage
-    
-    Args:
-        image_id: The ID of the image to retrieve
-        
-    Returns:
-        tuple: (base64_image_data, metadata)
-    """
+    """Retrieve an image from storage"""
     image_path = IMAGES_DIR / f"{image_id}.jpg"
     metadata_path = METADATA_DIR / f"{image_id}.json"
     
-    # Check if image exists
     if not image_path.exists():
         return None, None
     
-    # Read the image data
     with open(image_path, "rb") as f:
         image_data = f.read()
     
-    # Convert to base64
     image_base64 = base64.b64encode(image_data).decode('utf-8')
     
-    # Get metadata if available
     metadata = None
     if metadata_path.exists():
         with open(metadata_path, "r") as f:

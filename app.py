@@ -85,8 +85,6 @@ def save_image_data(image_data):
         print(f"Error processing image: {e}")
         return None, None
 
-
-
 # Routes
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -95,168 +93,174 @@ def health_check():
 @app.route('/api/generate-image', methods=['POST'])
 def generate_image():
     data = request.json
-    
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-        
     prompt = data.get('prompt')
+    
     if not prompt:
         return jsonify({"error": "No prompt provided"}), 400
-    
 
-    
-    # Set up for retry mechanism
-    max_attempts = 3
-    attempt = 0
-    result_text = None
-    result_image_data = None
-    last_error = None
-    
-    # Track detailed retry information
-    retry_info = {
-        "attempts": 0,
-        "max_attempts": max_attempts,
-        "errors": [],
-        "success": False
-    }
-    
-    while attempt < max_attempts:
-        attempt += 1
+    try:
+        # Set up for retry mechanism
+        max_attempts = 3
+        attempt = 0
+        result_image_data = None
+        retry_info = {
+            "attempts": 0,
+            "max_attempts": max_attempts,
+            "errors": [],
+            "success": False
+        }
         
-        try:
-            print(f"🔍 ATTEMPT {attempt}/{max_attempts} to generate image")
+        while attempt < max_attempts:
+            attempt += 1
             
-            # Create request body following the Gemini API format
-            request_body = {
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [
-                            {
-                                "text": prompt
-                            }
-                        ]
-                    }
-                ],
-                "generationConfig": {
-                    "temperature": 1,
-                    "topP": 0.95,
-                    "topK": 40,
-                    "maxOutputTokens": 8192,
-                    "responseModalities": ["image", "text"]
-                },
-                "safetySettings": [
-                    {
-                        "category": "HARM_CATEGORY_CIVIC_INTEGRITY",
-                        "threshold": "BLOCK_NONE"
-                    }
-                ]
-            }
-            
-            # Log request (without sensitive info)
-            print(f"🔍 REQUEST MODEL: gemini-2.0-flash-exp")
-            print(f"🔍 PROMPT: {prompt}")
-            
-            # Make the API call with a randomly selected API key
-            url = f"{BASE_URL}?key={get_random_api_key()}"
-            response = requests.post(
-                url, 
-                json=request_body,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            # Handle errors
-            if response.status_code != 200:
-                print(f"🔍 RESPONSE STATUS: {response.status_code}")
-                error_message = "Unknown error"
-                try:
-                    error_data = response.json()
-                    if 'error' in error_data and 'message' in error_data['error']:
-                        error_message = error_data['error']['message']
-                except:
-                    error_message = f"API Error: {response.status_code}"
+            try:
+                print(f"🔍 ATTEMPT {attempt}/{max_attempts} to generate image")
                 
-                last_error = error_message
-                # Record detailed error information
-                retry_info["attempts"] = attempt
+                # Create request with prompt and image generation settings
+                request_body = {
+                    "contents": [
+                        {
+                            "role": "user",
+                            "parts": [
+                                {
+                                    "text": prompt
+                                }
+                            ]
+                        }
+                    ],
+                    "generationConfig": {
+                        "temperature": 1,
+                        "topP": 0.95,
+                        "topK": 40,
+                        "maxOutputTokens": 8192,
+                        "responseModalities": ["image", "text"]
+                    },
+                    "safetySettings": [
+                        {
+                            "category": "HARM_CATEGORY_CIVIC_INTEGRITY",
+                            "threshold": "BLOCK_NONE"
+                        }
+                    ]
+                }
+                
+                # Log request
+                print(f"🔍 REQUEST MODEL: gemini-2.0-flash-exp")
+                print(f"🔍 PROMPT: {prompt}")
+                
+                # Make the API call with a randomly selected API key
+                url = f"{BASE_URL}?key={get_random_api_key()}"
+                response = requests.post(
+                    url, 
+                    json=request_body,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                # Handle errors
+                if response.status_code != 200:
+                    print(f"🔍 RESPONSE STATUS: {response.status_code}")
+                    error_message = "Unknown error"
+                    try:
+                        error_data = response.json()
+                        if 'error' in error_data and 'message' in error_data['error']:
+                            error_message = error_data['error']['message']
+                    except:
+                        error_message = f"API Error: {response.status_code}"
+                    
+                    if attempt < max_attempts:
+                        retry_info["errors"].append({
+                            "attempt": attempt,
+                            "message": error_message,
+                            "type": "api_error"
+                        })
+                        time.sleep(1)  # Short delay before retry
+                        continue
+                    else:
+                        return jsonify({
+                            "error": error_message,
+                            "retryInfo": retry_info
+                        }), response.status_code
+                
+                # Process successful response
+                response_data = response.json()
+                print(f"🔍 RESPONSE STATUS: {response.status_code}")
+                
+                # Extract image data
+                if 'candidates' in response_data and response_data['candidates']:
+                    first_candidate = response_data['candidates'][0]
+                    if 'content' in first_candidate and 'parts' in first_candidate['content']:
+                        parts = first_candidate['content']['parts']
+                        
+                        for part in parts:
+                            if 'inlineData' in part:
+                                inline_data = part['inlineData']
+                                if 'data' in inline_data and 'mimeType' in inline_data:
+                                    mime_type = inline_data['mimeType']
+                                    if mime_type.startswith('image/'):
+                                        result_image_data = inline_data['data']
+                                        print(f"🔍 IMAGE RECEIVED: {len(result_image_data)} chars, mime type: {mime_type}")
+                
+                # Check if we got an image back
+                if result_image_data is not None:
+                    print(f"🔍 Successfully generated image on attempt {attempt}/{max_attempts}")
+                    retry_info["attempts"] = attempt
+                    retry_info["success"] = True
+                    break  # Success - exit the retry loop
+                else:
+                    print(f"🔍 No image data in response, attempt {attempt}/{max_attempts}")
+                    if attempt < max_attempts:
+                        retry_info["errors"].append({
+                            "attempt": attempt,
+                            "message": "No image data received from API",
+                            "type": "missing_data"
+                        })
+                        time.sleep(1)  # Short delay before retry
+                        continue
+                    else:
+                        return jsonify({
+                            "error": "No image data received after multiple attempts",
+                            "retryInfo": retry_info
+                        }), 500
+            
+            except Exception as e:
+                print(f"🔍 Error during attempt {attempt}: {str(e)}")
                 retry_info["errors"].append({
                     "attempt": attempt,
-                    "status_code": response.status_code,
-                    "message": error_message,
-                    "type": "api_error"
+                    "message": str(e),
+                    "type": "exception"
                 })
-                continue  # Try again
-            
-            # Process successful response
-            response_data = response.json()
-            print(f"🔍 RESPONSE STATUS: {response.status_code}")
-            
-            # Extract text and image data
-            if 'candidates' in response_data and response_data['candidates']:
-                first_candidate = response_data['candidates'][0]
-                if 'content' in first_candidate and 'parts' in first_candidate['content']:
-                    parts = first_candidate['content']['parts']
-                    
-                    for part in parts:
-                        if 'text' in part:
-                            result_text = part['text']
-                        elif 'inlineData' in part:
-                            inline_data = part['inlineData']
-                            if 'data' in inline_data and 'mimeType' in inline_data:
-                                mime_type = inline_data['mimeType']
-                                if mime_type.startswith('image/'):
-                                    image_data_b64 = inline_data['data']
-                                    result_image_data = image_data_b64
-                                    print(f"🔍 IMAGE RECEIVED: {len(image_data_b64)} chars, mime type: {mime_type}")
-            
-            # Check if we got an image back
-            if result_image_data is not None:
-                print(f"🔍 Successfully generated image on attempt {attempt}/{max_attempts}")
-                # Record success information
-                retry_info["attempts"] = attempt
-                retry_info["success"] = True
-                break  # Success - exit the retry loop
-            else:
-                print(f"🔍 No image data in response, attempt {attempt}/{max_attempts}")
                 if attempt < max_attempts:
-                    last_error = "No image data received from API"
-                    # Record error about missing image data
-                    retry_info["attempts"] = attempt
-                    retry_info["errors"].append({
-                        "attempt": attempt,
-                        "message": "No image data received from API",
-                        "type": "missing_data"
-                    })
                     time.sleep(1)  # Short delay before retry
                     continue
+                else:
+                    return jsonify({
+                        "error": str(e),
+                        "retryInfo": retry_info
+                    }), 500
         
-        except Exception as e:
-            print(f"🔍 Error during attempt {attempt}: {str(e)}")
-            last_error = str(e)
-            # Record exception information
-            retry_info["attempts"] = attempt
-            retry_info["errors"].append({
-                "attempt": attempt,
-                "message": str(e),
-                "type": "exception"
+        # If we got here with image data, save it to storage
+        if result_image_data:
+            # Save image to storage
+            image_id = storage.save_image(
+                result_image_data, 
+                metadata={"prompt": prompt, "type": "generated"}
+            )
+            
+            # Return both the image data and ID
+            return jsonify({
+                "imageData": result_image_data,
+                "imageId": image_id,
+                "prompt": prompt,
+                "retryInfo": retry_info
             })
-            if attempt < max_attempts:
-                time.sleep(1)  # Short delay before retry
-                continue
-    
-    # After all attempts, return what we have
-    if result_image_data is None and last_error is not None:
-        return jsonify({
-            "error": f"Failed after {attempt} attempts. Last error: {last_error}",
-            "retryInfo": retry_info
-        }), 500
-    
-    # Return results
-    return jsonify({
-        "text": result_text,
-        "imageData": result_image_data,
-        "retryInfo": retry_info
-    })
+        else:
+            return jsonify({
+                "error": "Failed to generate image",
+                "retryInfo": retry_info
+            }), 500
+            
+    except Exception as e:
+        app.logger.error(f"Error generating image: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/edit-image', methods=['POST'])
 def edit_image():
