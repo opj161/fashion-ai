@@ -15,7 +15,24 @@ function ImageEditor({ initialImage, isActive, initialHistory = [], onImageEdite
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonImage, setComparisonImage] = useState(null);
 
-  // Rest of the existing code...
+  // Add the missing handleHistoryNavigation function
+  const handleHistoryNavigation = (index) => {
+    setCurrentHistoryIndex(index);
+    setCurrentImage(editHistory[index].image);
+    setShowComparison(false);
+  };
+
+  // Add the missing handleDownload function
+  const handleDownload = () => {
+    // Create temporary link element
+    const link = document.createElement('a');
+    link.href = `data:image/jpeg;base64,${currentImage}`;
+    link.download = `fashion-image-${Date.now()}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Image downloaded!');
+  };
   
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -144,10 +161,129 @@ function ImageEditor({ initialImage, isActive, initialHistory = [], onImageEdite
           </div>
         </div>
         
-        {/* Rest of the component remains the same */}
-        {/* ... */}
+        {/* Right side: Edit tools */}
+        <div className="md:col-span-2">
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border dark:border-gray-700 mb-6 transition-colors duration-300">
+            <h3 className="font-medium mb-3 text-gray-900 dark:text-gray-100">Custom Edit</h3>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="w-full border dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800
+                           text-gray-900 dark:text-gray-100 h-24"
+                placeholder="Enter detailed instructions for editing the image..."
+                disabled={loading}
+              ></textarea>
+              
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="py-2 px-4 bg-primary-600 dark:bg-primary-700 text-white rounded-lg 
+                           hover:bg-primary-700 dark:hover:bg-primary-600 disabled:bg-primary-400
+                           dark:disabled:bg-primary-800 transition-colors duration-200"
+                  disabled={loading || !prompt.trim()}
+                >
+                  {loading ? <LoadingSpinner /> : 'Apply Edit'}
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border dark:border-gray-700 transition-colors duration-300">
+            <h3 className="font-medium mb-3 text-gray-900 dark:text-gray-100">Quick Edits</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <QuickEditButton 
+                text="Higher quality" 
+                onClick={() => {
+                  setPrompt("Improve the image quality, make it more detailed and professional looking");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="More professional" 
+                onClick={() => {
+                  setPrompt("Make the image look more professional, like a high-end fashion catalog photo");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="Better lighting" 
+                onClick={() => {
+                  setPrompt("Improve the lighting to better showcase the clothing item");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="Fix proportions" 
+                onClick={() => {
+                  setPrompt("Fix any proportion issues with the model and make the body look more natural");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="Brighter background" 
+                onClick={() => {
+                  setPrompt("Make the background brighter and cleaner");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="More contrast" 
+                onClick={() => {
+                  setPrompt("Increase the contrast to make the clothing item stand out more");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="Natural pose" 
+                onClick={() => {
+                  setPrompt("Make the model's pose look more natural and comfortable");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="Focus on garment" 
+                onClick={() => {
+                  setPrompt("Make the clothing item the main focus of the image");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+              <QuickEditButton 
+                text="Fix artifacts" 
+                onClick={() => {
+                  setPrompt("Remove any visual glitches or artifacts in the image");
+                  setTimeout(() => handleSubmit(), 100);
+                }}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+// Helper component for quick edit buttons
+function QuickEditButton({ text, onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      className="py-2 px-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 
+               text-gray-800 dark:text-gray-200 rounded border dark:border-gray-700
+               transition-colors duration-200 text-sm text-center"
+      disabled={disabled}
+    >
+      {text}
+    </button>
   );
 }
 
