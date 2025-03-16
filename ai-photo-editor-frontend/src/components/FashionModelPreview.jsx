@@ -24,7 +24,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [ethnicity, setEthnicity] = useState('default');
   
   // Semi-essential settings with specific defaults
-  const [background, setBackground] = useState('studio-white');
+  const [background, setBackground] = useState('outdoor-nature');
   const [pose, setPose] = useState('natural');
   
   // Optional technical settings
@@ -239,7 +239,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     const settingSection = getBackgroundDescription();
     
     // Style section - always include this for quality results
-    const styleSection = "The model should look authentic and relatable with a natural expression. The clothing must fit perfectly and be the main visual focus of the image.";
+    const styleSection = "The model should look authentic and relatable with a natural expression and a subtle smile. The clothing must fit perfectly and be the visual focus of the image.n";
     
     // Technical section - only include specific camera/lens settings if not default
     let technicalSection = "Professional fashion photography lighting with perfect exposure and color accuracy.";
