@@ -44,6 +44,10 @@ else
     echo "✅ Configuration file already exists."
 fi
 
+# Download docker-compose.prod.yml if it doesn't exist
+echo "Downloading docker-compose.prod.yml..."
+curl -s -o docker-compose.prod.yml https://raw.githubusercontent.com/jayrom23/fashion-ai/main/docker-compose.prod.yml
+
 # Start the application
 echo "Starting AI Fashion Model app..."
 docker-compose -f docker-compose.prod.yml up -d
