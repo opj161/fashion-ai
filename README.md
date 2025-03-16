@@ -57,7 +57,7 @@ curl -sL https://raw.githubusercontent.com/jayrom23/fashion-ai/main/install.sh |
 3. Add two containers:
 
    **Backend Container:**
-   - Repository: `jayrom23/fashion-ai-backend:latest`
+   - Repository: `jay2323/fashion-ai-backend:latest`
    - Name: `fashion-ai-backend`
    - Port: `5002:5002`
    - Environment Variables:
@@ -68,7 +68,7 @@ curl -sL https://raw.githubusercontent.com/jayrom23/fashion-ai/main/install.sh |
      - `ALLOWED_ORIGINS=http://your_unraid_ip:8080`
 
    **Frontend Container:**
-   - Repository: `jayrom23/fashion-ai-frontend:latest`
+   - Repository: `jay2323/fashion-ai-frontend:latest`
    - Name: `fashion-ai-frontend`
    - Port: `8080:80`
 

@@ -10,7 +10,8 @@ services:
       - HOST=0.0.0.0
       - PORT=${BACKEND_PORT:-5002}
       - DEBUG=${DEBUG:-false}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://${HOST_IP:-localhost}:${FRONTEND_PORT:-8080}}
+      # Fix: Add multiple CORS origins including internal Docker network references
+      - ALLOWED_ORIGINS=http://frontend,http://localhost:${FRONTEND_PORT:-8080},http://${HOST_IP:-localhost}:${FRONTEND_PORT:-8080}
     ports:
       - "${BACKEND_PORT:-5002}:${BACKEND_PORT:-5002}"
     networks:
@@ -20,6 +21,9 @@ services:
     image: jay2323/fashion-ai-frontend:latest
     container_name: fashion-ai-frontend
     restart: unless-stopped
+    # Fix: Use environment variable to properly configure API URL
+    environment:
+      - NGINX_ENV_API_URL=http://backend:5002
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     depends_on:

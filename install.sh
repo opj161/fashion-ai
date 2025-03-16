@@ -37,6 +37,9 @@ HOST_IP=$HOST_IP        # Your server's IP address
 BACKEND_PORT=5002       # Backend API port
 FRONTEND_PORT=8080      # Frontend web port
 DEBUG=false             # Set to true for debug mode
+
+# Allow multiple CORS origins
+ALLOWED_ORIGINS=http://frontend,http://localhost:8080,http://$HOST_IP:8080
 EOF
 
     echo "✅ Configuration file created!"

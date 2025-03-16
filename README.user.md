@@ -7,7 +7,7 @@ Transform clothing product photos into professional fashion model images using A
 The easiest way to get started is using our installation script:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/jay2323/fashion-ai/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/jayrom23/fashion-ai/main/install.sh | bash
 ```
 
 Then open http://localhost:8080 in your browser (or use your server's IP address).
@@ -21,7 +21,7 @@ Then open http://localhost:8080 in your browser (or use your server's IP address
    ```
 3. Download the docker-compose.yml file:
    ```bash
-   curl -o docker-compose.yml https://raw.githubusercontent.com/jay2323/fashion-ai/main/docker-compose.prod.yml
+   curl -o docker-compose.yml https://raw.githubusercontent.com/jayrom23/fashion-ai/main/docker-compose.prod.yml
    ```
 4. Create a .env file with your configuration:
    ```bash
