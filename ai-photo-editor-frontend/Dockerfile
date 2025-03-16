@@ -2,21 +2,15 @@ FROM node:18-alpine as build
 
 WORKDIR /app
 
-# Set ARGs for build configuration
-ARG VITE_API_URL=http://localhost:5002
-
-# Set environment variables for build process
-ENV VITE_API_URL=$VITE_API_URL
-
 # Copy package files and install dependencies
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 # Copy application code
 COPY . .
 
-# Create a .env file with the API URL
-RUN echo "VITE_API_URL=$VITE_API_URL" > .env
+# Copy config to template for runtime replacement
+RUN cp /app/public/config.js /app/public/config.js.template
 
 # Build the application
 RUN npm run build
@@ -26,12 +20,15 @@ FROM nginx:alpine
 
 # Copy built app to nginx
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/public/config.js.template /usr/share/nginx/html/config.js.template
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Add a simple health check for the frontend
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+# Add the entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
+# Use our custom entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

@@ -59,6 +59,6 @@ echo "Files have been staged for your initial commit."
 echo "Next steps:"
 echo "1. Run: git commit -m \"Initial commit\""
 echo "2. Create a repository on GitHub"
-echo "3. Run: git remote add origin https://github.com/YOUR_USERNAME/fashion-ai.git"
+echo "3. Run: git remote add origin https://github.com/jayr/fashion-ai.git"
 echo "4. Run: git push -u origin main"
 echo
