@@ -20,15 +20,19 @@ if ! docker system info --format '{{.RegistryConfig.IndexConfigs}}' | grep -q 'd
 fi
 echo "✅ Docker Hub authentication confirmed"
 
-# Check for uncommitted changes
+# Fix: Improve git status check to avoid false positives
 if command -v git &> /dev/null && [ -d .git ]; then
-    if [ -n "$(git status --porcelain)" ]; then
+    # Only count actual changes, ignore line ending and whitespace differences
+    GIT_STATUS=$(git status --porcelain=v1 --untracked-files=no --ignore-submodules=all | grep -v "^$$")
+    if [ -n "$GIT_STATUS" ]; then
         echo "⚠️ You have uncommitted changes. Consider committing before updating images."
         read -p "Continue anyway? (y/n): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             exit 1
         fi
+    else
+        echo "✅ Git repository is clean"
     fi
 fi
 
@@ -60,7 +64,7 @@ docker push $DOCKER_USERNAME/fashion-ai-frontend:latest
 echo "✅ Frontend images pushed"
 
 # Return to the project root
-cd $BACKEND_DIR
+cd ..
 
 # Update the image tags in docker-compose.yml if it exists
 if [ -f "docker-compose.yml" ]; then
@@ -69,13 +73,29 @@ if [ -f "docker-compose.yml" ]; then
     # Backup the original file
     cp docker-compose.yml docker-compose.yml.bak
     
-    # Update the image tags
+    # Update the image tags using platform-independent sed (works in both Linux and WSL)
     sed -i.bak "s|image: $DOCKER_USERNAME/fashion-ai-backend:.*|image: $DOCKER_USERNAME/fashion-ai-backend:$VERSION|" docker-compose.yml
     sed -i.bak "s|image: $DOCKER_USERNAME/fashion-ai-frontend:.*|image: $DOCKER_USERNAME/fashion-ai-frontend:$VERSION|" docker-compose.yml
     
     # Remove backup files created by sed
     rm -f docker-compose.yml.bak
     echo "✅ docker-compose.yml updated"
+fi
+
+# Also update docker-compose.prod.yml if it exists
+if [ -f "docker-compose.prod.yml" ]; then
+    echo "Updating docker-compose.prod.yml with new image tags..."
+    
+    # Backup the original file
+    cp docker-compose.prod.yml docker-compose.prod.yml.bak
+    
+    # Update the image tags
+    sed -i.bak "s|image: $DOCKER_USERNAME/fashion-ai-backend:.*|image: $DOCKER_USERNAME/fashion-ai-backend:$VERSION|" docker-compose.prod.yml
+    sed -i.bak "s|image: $DOCKER_USERNAME/fashion-ai-frontend:.*|image: $DOCKER_USERNAME/fashion-ai-frontend:$VERSION|" docker-compose.prod.yml
+    
+    # Remove backup files created by sed
+    rm -f docker-compose.prod.yml.bak
+    echo "✅ docker-compose.prod.yml updated"
 fi
 
 echo
