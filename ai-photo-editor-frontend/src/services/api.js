@@ -18,6 +18,40 @@ const api = {
     } catch (error) {
       throw error.response?.data || { error: "Failed to edit image" };
     }
+  },
+  
+  // Add cloud storage API methods
+  saveImage: async (imageData, metadata = {}) => {
+    try {
+      const response = await axios.post('/api/images/save', { 
+        imageData, 
+        metadata 
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to save image" };
+    }
+  },
+  
+  getImage: async (imageId) => {
+    try {
+      const response = await axios.get(`/api/images/${imageId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to retrieve image" };
+    }
+  },
+  
+  listImages: async (limit = 50, offset = 0, tag = null) => {
+    try {
+      let url = `/api/images?limit=${limit}&offset=${offset}`;
+      if (tag) url += `&tag=${tag}`;
+      
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to list images" };
+    }
   }
 };
 

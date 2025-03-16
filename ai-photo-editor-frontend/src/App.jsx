@@ -1,15 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ImageUploader from './components/ImageUploader';
 import FashionModelPreview from './components/FashionModelPreview';
 import ImageEditor from './components/ImageEditor';
+import ProjectsPanel from './components/ProjectsPanel';
+import projectService from './services/projectService';
 
 function App() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [activeSection, setActiveSection] = useState('upload');
+  const [currentProject, setCurrentProject] = useState({
+    name: '',
+    templateSettings: null,
+    tags: [],
+    editHistory: []
+  });
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
   const previewRef = useRef(null);
   const editorRef = useRef(null);
   
@@ -23,29 +33,134 @@ function App() {
     }
   }, []);
 
+  // Prompt before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (unsavedChanges) {
+        const message = 'You have unsaved changes. Are you sure you want to leave?';
+        e.returnValue = message;
+        return message;
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [unsavedChanges]);
+
   const handleImageUploaded = (imageData) => {
     setUploadedImage(imageData);
     setActiveSection('generate');
+    setCurrentProject(prev => ({
+      ...prev,
+      originalImage: imageData,
+      updatedAt: new Date().toISOString()
+    }));
+    setUnsavedChanges(true);
     setTimeout(() => {
       previewRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  const handleFashionGenerated = (imageData) => {
+  const handleFashionGenerated = (imageData, templateSettings) => {
     setGeneratedImage(imageData);
     setActiveSection('edit');
+    setCurrentProject(prev => ({
+      ...prev,
+      generatedImage: imageData,
+      templateSettings,
+      editHistory: [{ image: imageData, prompt: 'Original Generation' }],
+      updatedAt: new Date().toISOString()
+    }));
+    setUnsavedChanges(true);
     setTimeout(() => {
       editorRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  const handleReset = () => {
-    if (confirm('Start over with a new image? This will clear your current work.')) {
-      setUploadedImage(null);
-      setGeneratedImage(null);
-      setActiveSection('upload');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Update the handleSaveProject function
+
+const handleSaveProject = async () => {
+  // Show prompt for project name if not set
+  let projectName = currentProject.name;
+  if (!projectName) {
+    projectName = prompt('Enter a name for your project:', `Fashion Project ${new Date().toLocaleDateString()}`);
+    if (!projectName) return; // User cancelled
+  }
+
+  // Show saving indicator
+  toast.loading('Saving project...');
+  
+  const projectToSave = {
+    ...currentProject,
+    name: projectName,
+    id: currentProject.id || Date.now().toString()
+  };
+
+  // Use the enhanced save with cloud storage
+  const success = await projectService.saveProjectWithCloudStorage(projectToSave);
+  
+  // Dismiss loading toast
+  toast.dismiss();
+  
+  if (success) {
+    setCurrentProject(projectToSave);
+    setUnsavedChanges(false);
+    toast.success('Project saved successfully!');
+  } else {
+    toast.error('Failed to save project');
+  }
+};
+
+  const handleLoadProject = (project) => {
+    if (unsavedChanges && !confirm('You have unsaved changes. Load another project anyway?')) {
+      return;
     }
+    
+    setCurrentProject(project);
+    setUploadedImage(project.originalImage);
+    setGeneratedImage(project.generatedImage);
+    
+    // Determine which step to activate based on available data
+    if (project.generatedImage) {
+      setActiveSection('edit');
+      setTimeout(() => editorRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } else if (project.originalImage) {
+      setActiveSection('generate');
+      setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } else {
+      setActiveSection('upload');
+    }
+    
+    setUnsavedChanges(false);
+    toast.success(`Loaded project: ${project.name || 'Untitled'}`);
+  };
+
+  const handleImageEdited = (imageData, editHistory) => {
+    setCurrentProject(prev => ({
+      ...prev,
+      generatedImage: imageData,
+      editHistory: editHistory || prev.editHistory,
+      updatedAt: new Date().toISOString()
+    }));
+    setUnsavedChanges(true);
+  };
+
+  const handleReset = () => {
+    if (unsavedChanges && !confirm('You have unsaved changes. Start over anyway?')) {
+      return;
+    }
+    
+    setUploadedImage(null);
+    setGeneratedImage(null);
+    setActiveSection('upload');
+    setCurrentProject({
+      name: '',
+      templateSettings: null,
+      tags: [],
+      editHistory: []
+    });
+    setUnsavedChanges(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -82,6 +197,47 @@ function App() {
           </p>
         </div>
 
+        {/* Project toolbar */}
+        <div className="mb-6 flex justify-between items-center">
+          <div className="flex items-center">
+            <input
+              type="text"
+              placeholder="Project name..."
+              value={currentProject.name}
+              onChange={(e) => {
+                setCurrentProject(prev => ({ ...prev, name: e.target.value }));
+                setUnsavedChanges(true);
+              }}
+              className="border dark:border-gray-700 rounded-l px-3 py-2 bg-white dark:bg-gray-800 
+                        text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 
+                        focus:ring-primary-500"
+            />
+            <button
+              onClick={handleSaveProject}
+              disabled={!uploadedImage}
+              className={`px-4 py-2 rounded-r border-y border-r ${
+                unsavedChanges 
+                  ? 'bg-primary-600 dark:bg-primary-700 text-white border-primary-600 dark:border-primary-700' 
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+              } ${!uploadedImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-700 dark:hover:bg-primary-600'}`}
+            >
+              {unsavedChanges ? 'Save Changes' : 'Saved'}
+            </button>
+            
+            {/* Display tags if any */}
+            {currentProject.tags && currentProject.tags.length > 0 && (
+              <div className="ml-3 flex flex-wrap gap-1">
+                {currentProject.tags.map((tag, i) => (
+                  <span key={i} className="text-xs bg-gray-100 dark:bg-gray-700 
+                                         px-2 py-1 rounded-full text-gray-600 dark:text-gray-400">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Fixed floating progress indicator */}
         <div className="fixed top-20 right-4 z-10 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg 
                         border border-gray-200 dark:border-gray-700 transition-colors duration-300">
@@ -111,15 +267,28 @@ function App() {
               Edit
             </div>
           </div>
-          {(uploadedImage || generatedImage) && (
+          <div className="mt-3 space-y-2">
             <button
-              onClick={handleReset}
-              className="mt-3 w-full text-xs py-1 px-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 
-                        dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-300 transition-colors duration-200"
+              onClick={handleSaveProject}
+              disabled={!uploadedImage}
+              className={`w-full text-xs py-1 px-2 rounded ${
+                unsavedChanges && uploadedImage
+                  ? 'bg-primary-600 dark:bg-primary-700 text-white hover:bg-primary-700 dark:hover:bg-primary-600'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              } transition-colors duration-200 ${!uploadedImage ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Start Over
+              {unsavedChanges ? 'Save' : 'Saved'}
             </button>
-          )}
+            {(uploadedImage || generatedImage) && (
+              <button
+                onClick={handleReset}
+                className="w-full text-xs py-1 px-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 
+                        dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-300 transition-colors duration-200"
+              >
+                Start Over
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Main content sections */}
@@ -140,6 +309,7 @@ function App() {
               onImageUploaded={handleImageUploaded} 
               isActive={activeSection === 'upload'}
               onActivate={() => setActiveSection('upload')}
+              initialImage={uploadedImage}
             />
           </section>
 
@@ -172,6 +342,7 @@ function App() {
                 clothingImage={uploadedImage}
                 onImageGenerated={handleFashionGenerated}
                 isActive={activeSection === 'generate'}
+                initialSettings={currentProject.templateSettings}
               />
             ) : (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -209,6 +380,8 @@ function App() {
               <ImageEditor 
                 initialImage={generatedImage} 
                 isActive={activeSection === 'edit'}
+                initialHistory={currentProject.editHistory}
+                onImageEdited={handleImageEdited}
               />
             ) : (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -219,6 +392,9 @@ function App() {
           </section>
         </div>
       </main>
+      
+      {/* Projects Panel */}
+      <ProjectsPanel onLoadProject={handleLoadProject} />
       
       <Footer />
     </div>

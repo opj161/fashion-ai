@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
 from dotenv import load_dotenv
+import storage
 
 # Configure logging
 logging.basicConfig(
@@ -434,6 +435,56 @@ def edit_image():
         "text": result_text,
         "imageData": result_image_data,
         "retryInfo": retry_info
+    })
+
+@app.route('/api/images/save', methods=['POST'])
+def save_image():
+    data = request.json
+    
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    image_data = data.get('imageData')
+    metadata = data.get('metadata', {})
+    
+    if not image_data:
+        return jsonify({"error": "No image data provided"}), 400
+    
+    # Save the image
+    image_id = storage.save_image(image_data, metadata)
+    
+    if not image_id:
+        return jsonify({"error": "Failed to save image"}), 500
+    
+    return jsonify({
+        "id": image_id,
+        "message": "Image saved successfully"
+    })
+
+@app.route('/api/images/<image_id>', methods=['GET'])
+def get_image(image_id):
+    image_data, metadata = storage.get_image(image_id)
+    
+    if not image_data:
+        return jsonify({"error": "Image not found"}), 404
+    
+    return jsonify({
+        "id": image_id,
+        "imageData": image_data,
+        "metadata": metadata
+    })
+
+@app.route('/api/images', methods=['GET'])
+def list_images():
+    limit = request.args.get('limit', 50, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    tag = request.args.get('tag', None)
+    
+    images = storage.list_images(limit, offset, tag)
+    
+    return jsonify({
+        "images": images,
+        "count": len(images)
     })
 
 @app.route('/', methods=['GET'])

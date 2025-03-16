@@ -7,12 +7,16 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [customAttributes, setCustomAttributes] = useState({
     gender: 'female',
+    bodyType: 'average',  // New attribute
+    ethnicity: 'caucasian',  // New attribute
+    age: '25-35',  // New attribute
     style: 'studio',
     angle: 'front',
     background: 'white',
   });
   const [loading, setLoading] = useState(false);
   const [previewScaling, setPreviewScaling] = useState('fit');
+  const [productType, setProductType] = useState('top'); // New attribute for clothing type
 
   const templates = [
     {
@@ -20,35 +24,61 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
       name: 'Studio Front View',
       description: 'Professional front-facing studio shot',
       image: '👔',
-      prompt: gender => `A professional ${gender} model wearing this clothing item, standing in a clean studio setting with neutral lighting, front view, full body shot, ${gender === 'female' ? 'she is' : 'he is'} posing confidently.`
+      prompt: (attributes) => {
+        const { gender, bodyType, ethnicity, age } = attributes;
+        return `A professional ${ethnicity} ${gender} model with ${bodyType} body type, ${age} years old, wearing this clothing item, standing in a clean studio setting with neutral lighting, front view, full body shot, ${gender === 'female' ? 'she is' : 'he is'} posing confidently.`;
+      }
     },
     {
       id: 'studio-angled',
       name: 'Studio Angled View',
       description: 'Professional studio photo with slight angle',
       image: '👗',
-      prompt: gender => `A professional ${gender} model wearing this clothing item, standing in a clean studio setting with dramatic lighting, 3/4 angle view, full body shot, ${gender === 'female' ? 'she is' : 'he is'} posing with one hand on hip.`
+      prompt: (attributes) => {
+        const { gender, bodyType, ethnicity, age } = attributes;
+        return `A professional ${ethnicity} ${gender} model with ${bodyType} body type, ${age} years old, wearing this clothing item, standing in a clean studio setting with dramatic lighting, 3/4 angle view, full body shot, ${gender === 'female' ? 'she is' : 'he is'} posing with one hand on hip.`;
+      }
     },
     {
       id: 'outdoor-casual',
       name: 'Outdoor Casual',
       description: 'Casual outdoor setting with natural lighting',
       image: '👚',
-      prompt: gender => `A ${gender} model wearing this clothing item in an outdoor setting with natural lighting, casual pose, urban background, street style photography, lifestyle fashion shoot.`
+      prompt: (attributes) => {
+        const { gender, bodyType, ethnicity, age } = attributes;
+        return `A ${ethnicity} ${gender} model with ${bodyType} body type, ${age} years old, wearing this clothing item in an outdoor setting with natural lighting, casual pose, urban background, street style photography, lifestyle fashion shoot.`;
+      }
     },
     {
       id: 'urban-street',
       name: 'Urban Street Style',
       description: 'Urban environment with street style aesthetic',
       image: '🧥',
-      prompt: gender => `A ${gender} model wearing this clothing item on a city street, urban environment, editorial style photography, candid pose, street fashion, with blurred city background.`
+      prompt: (attributes) => {
+        const { gender, bodyType, ethnicity, age } = attributes;
+        return `A ${ethnicity} ${gender} model with ${bodyType} body type, ${age} years old, wearing this clothing item on a city street, urban environment, editorial style photography, candid pose, street fashion, with blurred city background.`;
+      }
     },
     {
       id: 'high-fashion',
       name: 'High Fashion Editorial',
       description: 'Editorial high-fashion photography style',
       image: '👘',
-      prompt: gender => `A ${gender} high fashion model wearing this clothing item, editorial style photography, dramatic lighting, artistic composition, magazine quality, luxury fashion shoot, professional fashion photography.`
+      prompt: (attributes) => {
+        const { gender, bodyType, ethnicity, age } = attributes;
+        return `A ${ethnicity} ${gender} high fashion model with ${bodyType} body type, ${age} years old, wearing this clothing item, editorial style photography, dramatic lighting, artistic composition, magazine quality, luxury fashion shoot, professional fashion photography.`;
+      }
+    },
+    // New template
+    {
+      id: 'e-commerce',
+      name: 'E-Commerce Product',
+      description: 'Clean, professional e-commerce style',
+      image: '🛍️',
+      prompt: (attributes) => {
+        const { gender, bodyType, ethnicity, age, productType } = attributes;
+        return `A ${ethnicity} ${gender} model with ${bodyType} body type, ${age} years old, wearing this ${productType}, perfect for online store product display, neutral expression, clean composition, professional e-commerce catalog photo, showing fit and drape of the garment clearly.`;
+      }
     }
   ];
 
@@ -63,6 +93,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
     }));
   };
 
+  // Enhance the handleGenerate function for better product-specific prompts
   const handleGenerate = async () => {
     if (!selectedTemplate) {
       toast.error('Please select a template first');
@@ -71,18 +102,27 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
 
     setLoading(true);
     try {
-      // Build the prompt
-      const basePrompt = selectedTemplate.prompt(customAttributes.gender);
+      // Build product-specific details for better prompts
+      const productDetails = getProductSpecificDetails(productType);
+      
+      // Build the prompt with enhanced attributes
+      const basePrompt = selectedTemplate.prompt(customAttributes);
       const fullPrompt = `Generate a realistic full-body fashion photography image: ${basePrompt}. 
       Background: ${customAttributes.background} background. 
       View: ${customAttributes.angle} view.
       Style: ${customAttributes.style} style.
+      Product type: ${productType}.
+      ${productDetails}
       The clothing item is the main focus of the image. Make it look like a professional fashion catalog photo.`;
       
       // Use the edit-image endpoint since we're providing a source image
       const data = await api.editImage(fullPrompt, clothingImage);
       if (data.imageData) {
-        onImageGenerated(data.imageData);
+        onImageGenerated(data.imageData, {
+          prompt: fullPrompt,
+          template: selectedTemplate.id,
+          customAttributes: {...customAttributes, productType}
+        });
         toast.success('Fashion image generated successfully!');
       } else {
         toast.error('Failed to generate fashion image');
@@ -92,6 +132,24 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
       toast.error(error.error || 'Failed to generate fashion image');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add product-specific prompt helper
+  const getProductSpecificDetails = (productType) => {
+    switch(productType) {
+      case 'top':
+        return 'Ensure the top fits naturally on the model with appropriate draping and wrinkles. Show how the fabric falls on the torso.';
+      case 'dress':
+        return 'The dress should flow elegantly with natural movement, showing the proper length and fit at the waist.';
+      case 'pants':
+        return 'Show how the pants fit at the waist and how they fall to the appropriate length. Ensure proper draping on the legs.';
+      case 'jacket':
+        return 'The jacket should show proper shoulder fit and sleeve length, with attention to how it layers over other clothing.';
+      case 'sweater':
+        return 'Show the texture and thickness of the sweater, with natural folds and draping on the model\'s body.';
+      default:
+        return 'Ensure the clothing item fits correctly on the model, with natural draping and proper proportions.';
     }
   };
 
@@ -131,6 +189,26 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
                   alt="Uploaded clothing" 
                   className={`${previewScaling === 'fit' ? 'max-w-full h-auto max-h-64' : 'w-auto'} rounded`}
                 />
+              </div>
+              
+              {/* New: Product Type selection */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Type</label>
+                <select 
+                  value={productType}
+                  onChange={(e) => setProductType(e.target.value)}
+                  className="w-full border dark:border-gray-700 rounded p-2 bg-white dark:bg-gray-800 
+                           text-gray-900 dark:text-gray-100"
+                >
+                  <option value="top">Top / Shirt / Blouse</option>
+                  <option value="dress">Dress</option>
+                  <option value="pants">Pants / Trousers</option>
+                  <option value="skirt">Skirt</option>
+                  <option value="jacket">Jacket / Coat</option>
+                  <option value="sweater">Sweater / Hoodie</option>
+                  <option value="swimwear">Swimwear</option>
+                  <option value="formal wear">Formal Wear</option>
+                </select>
               </div>
             </div>
           </div>
@@ -173,6 +251,55 @@ function FashionModelPreview({ clothingImage, onImageGenerated, isActive }) {
                   >
                     <option value="female">Female</option>
                     <option value="male">Male</option>
+                  </select>
+                </div>
+                
+                {/* New: Ethnicity Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model Ethnicity</label>
+                  <select 
+                    value={customAttributes.ethnicity}
+                    onChange={(e) => handleAttributeChange('ethnicity', e.target.value)}
+                    className="w-full border dark:border-gray-700 rounded p-2 bg-white dark:bg-gray-800 
+                             text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="caucasian">Caucasian</option>
+                    <option value="black">Black</option>
+                    <option value="asian">Asian</option>
+                    <option value="hispanic">Hispanic</option>
+                    <option value="middle eastern">Middle Eastern</option>
+                  </select>
+                </div>
+                
+                {/* New: Body Type Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Body Type</label>
+                  <select 
+                    value={customAttributes.bodyType}
+                    onChange={(e) => handleAttributeChange('bodyType', e.target.value)}
+                    className="w-full border dark:border-gray-700 rounded p-2 bg-white dark:bg-gray-800 
+                             text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="slim">Slim</option>
+                    <option value="average">Average</option>
+                    <option value="athletic">Athletic</option>
+                    <option value="plus-size">Plus Size</option>
+                  </select>
+                </div>
+                
+                {/* New: Age Range Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Age Range</label>
+                  <select 
+                    value={customAttributes.age}
+                    onChange={(e) => handleAttributeChange('age', e.target.value)}
+                    className="w-full border dark:border-gray-700 rounded p-2 bg-white dark:bg-gray-800 
+                             text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="18-25">18-25</option>
+                    <option value="25-35">25-35</option>
+                    <option value="35-45">35-45</option>
+                    <option value="45+">45+</option>
                   </select>
                 </div>
                 
