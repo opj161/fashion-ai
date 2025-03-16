@@ -1,6 +1,6 @@
 services:
   backend:
-    image: jay2323/fashion-ai-backend:20250316.0513
+    image: jay2323/fashion-ai-backend:latest
     container_name: fashion-ai-backend
     restart: unless-stopped
     environment:
@@ -16,7 +16,7 @@ services:
       - fashion-ai-network
 
   frontend:
-    image: jay2323/fashion-ai-frontend:20250316.0513
+    image: jay2323/fashion-ai-frontend:latest
     container_name: fashion-ai-frontend
     restart: unless-stopped
     ports:
