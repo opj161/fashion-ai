@@ -1,19 +1,17 @@
-version: '3.8'
-
 services:
   backend:
     image: jay2323/fashion-ai-backend:latest
     container_name: fashion-ai-backend
     restart: unless-stopped
     environment:
-      # Fix: Change to match your .env file variable name
-      - GEMINI_API_KEY_01=${GEMINI_API_KEY}
+      - GEMINI_API_KEY_01=${GEMINI_API_KEY:?GEMINI_API_KEY is required}
       - HOST=0.0.0.0
       - PORT=5002
       - DEBUG=${DEBUG:-false}
-      - ALLOWED_ORIGINS=http://frontend,http://localhost:${FRONTEND_PORT:-8080},http://${HOST_IP:-localhost}:${FRONTEND_PORT:-8080}
+      # Allow frontend requests - this is critical
+      - ALLOWED_ORIGINS=http://frontend,http://localhost:${FRONTEND_PORT:-8080}
     ports:
-      - "${BACKEND_PORT:-5002}:${BACKEND_PORT:-5002}"
+      - "${BACKEND_PORT:-5002}:5002"
     networks:
       - fashion-ai-network
 
@@ -21,8 +19,6 @@ services:
     image: jay2323/fashion-ai-frontend:latest
     container_name: fashion-ai-frontend
     restart: unless-stopped
-    environment:
-      - NGINX_ENV_API_URL=http://backend:5002
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     depends_on:

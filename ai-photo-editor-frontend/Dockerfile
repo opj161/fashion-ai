@@ -9,9 +9,6 @@ RUN npm ci
 # Copy application code
 COPY . .
 
-# Copy config to template for runtime replacement
-RUN cp /app/public/config.js /app/public/config.js.template
-
 # Build the application
 RUN npm run build
 
@@ -20,7 +17,6 @@ FROM nginx:alpine
 
 # Copy built app to nginx
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY --from=build /app/public/config.js.template /usr/share/nginx/html/config.js.template
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Add the entrypoint script
