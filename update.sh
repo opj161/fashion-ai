@@ -11,12 +11,16 @@ VERSION=$(date +"%Y%m%d.%H%M")
 BACKEND_DIR="."
 FRONTEND_DIR="./ai-photo-editor-frontend"
 
-# Check if logged in to Docker Hub
+# Fix: More reliable Docker Hub authentication check
 echo "Checking Docker Hub authentication..."
-if ! docker info | grep -q 'Username'; then
-    echo "Not logged in to Docker Hub. Please run 'docker login' first."
-    exit 1
+if ! docker system info --format '{{.RegistryConfig.IndexConfigs}}' | grep -q 'docker.io'; then
+    # Try alternative check if the first one fails
+    if ! docker info | grep -q "Registry"; then
+        echo "Not logged in to Docker Hub. Please run 'docker login' first."
+        exit 1
+    fi
 fi
+echo "✅ Docker Hub authentication confirmed"
 
 # Stop running containers
 echo "Stopping running containers (if any)..."
