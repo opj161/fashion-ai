@@ -334,6 +334,17 @@ Technical details: ${technicalSection}`;
   
   return (
     <div className="space-y-6">
+      {/* Add overlay when loading */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl text-center">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-lg font-medium text-gray-800 dark:text-gray-200">Generating your fashion model...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">This may take a few moments</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left side: uploaded clothing image */}
         <div className="md:col-span-1">

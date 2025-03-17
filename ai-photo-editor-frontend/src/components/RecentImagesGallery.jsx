@@ -4,7 +4,7 @@ import api from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 import { CARD_STYLES } from '../styles/constants';
 
-function RecentImagesGallery({ onImageSelected }) {
+function RecentImagesGallery({ onImageSelected, refreshTrigger = 0 }) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,7 +47,7 @@ function RecentImagesGallery({ onImageSelected }) {
 
   useEffect(() => {
     fetchImages(0);
-  }, [fetchImages]);
+  }, [fetchImages, refreshTrigger]);
 
   const handleLoadMore = () => {
     if (!loading && hasMore) {
@@ -183,7 +183,8 @@ function RecentImagesGallery({ onImageSelected }) {
 }
 
 RecentImagesGallery.propTypes = {
-  onImageSelected: PropTypes.func.isRequired
+  onImageSelected: PropTypes.func.isRequired,
+  refreshTrigger: PropTypes.number // Add this prop type
 };
 
 export default RecentImagesGallery;

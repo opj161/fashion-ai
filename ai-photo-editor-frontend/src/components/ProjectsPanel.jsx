@@ -4,7 +4,6 @@ import projectService from '../services/projectService';
 
 function ProjectsPanel({ onLoadProject }) {
   const [projects, setProjects] = useState([]);
-  const [filterTag, setFilterTag] = useState('');
   const [showPanel, setShowPanel] = useState(false);
   
   useEffect(() => {
@@ -75,7 +74,7 @@ function ProjectsPanel({ onLoadProject }) {
       
       {showPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-30 flex justify-end">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 h-full overflow-y-auto shadow-lg animate-slide-in-right">
+          <div className="w-full max-w-full sm:max-w-md md:max-w-lg bg-white dark:bg-gray-800 h-full overflow-y-auto shadow-lg animate-slide-in-right">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Saved Projects</h2>
               <button 

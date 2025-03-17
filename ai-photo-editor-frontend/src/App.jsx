@@ -22,6 +22,7 @@ function App() {
   
   // Gallery state
   const [showGallery, setShowGallery] = useState(false);
+  const [galleryRefreshCounter, setGalleryRefreshCounter] = useState(0); // Add this state
 
   // Generate unique ID for workspace states
   const generateStateId = () => `state-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -111,16 +112,27 @@ function App() {
     setCurrentStep(2);
   };
 
-  // Handle image generation
+  // Modified handler that shows gallery and refreshes it
   const handleImageGenerated = (imageData, metadata, id) => {
     setGeneratedImage(imageData);
     setGeneratedImageMetadata(metadata);
     setImageId(id || null);
     setCurrentStep(3);
-    
+
+    // Show gallery after generation
+    setShowGallery(true);
+
+    // Increment counter to trigger gallery refresh
+    setGalleryRefreshCounter(prev => prev + 1);
+
     // Auto-save after generation
     const autoSaveName = `Generated ${new Date().toLocaleTimeString()}`;
     saveCurrentState(autoSaveName);
+
+    // Show success notification with auto-dismiss
+    toast.success('Image generated successfully! Showing in gallery.', {
+      duration: 3000,
+    });
   };
 
   // Handle gallery image selected
@@ -217,7 +229,10 @@ function App() {
             {/* Recent Images Gallery */}
             {showGallery && (
               <div className="mb-6 p-4 bg-white dark:bg-gray-800/50 border dark:border-gray-700 rounded-lg">
-                <RecentImagesGallery onImageSelected={handleGalleryImageSelected} />
+                <RecentImagesGallery 
+                  onImageSelected={handleGalleryImageSelected} 
+                  refreshTrigger={galleryRefreshCounter} 
+                />
               </div>
             )}
             

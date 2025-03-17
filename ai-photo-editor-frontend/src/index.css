@@ -76,3 +76,28 @@ button {
     background-position: 100% 50%;
   }
 }
+
+/* Add these transition classes to your CSS */
+.step-transition {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.step-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.step-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.step-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.step-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+}
