@@ -1,7 +1,7 @@
+// From src/contexts/useEditor.js
 import { useContext } from 'react';
 import { EditorContext } from './editorContextState';
 
-// Custom hook for using the editor context
 export function useEditor() {
   const context = useContext(EditorContext);
   if (!context) {

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useEditor } from '../contexts/EditorContext';
+import { useEditor } from '../contexts/useEditor';  // Correct import path
 import UnifiedEditorLayout from './UnifiedEditorLayout';
 import ControlPanel from './ControlPanel';
 import PreviewPanel from './PreviewPanel';
