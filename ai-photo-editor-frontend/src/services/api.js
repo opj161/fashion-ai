@@ -1,66 +1,75 @@
-import axios from 'axios';
+/**
+ * API service for interacting with the backend
+ */
 
-// Use relative paths - will be proxied through nginx
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// Helper function to handle API responses
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'API request failed');
+  }
+  return response.json();
+};
+
 const api = {
+  // Generate an image based on a prompt
   generateImage: async (prompt) => {
-    try {
-      const response = await axios.post('/api/generate-image', { prompt });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { error: "Failed to generate image" };
-    }
+    const response = await fetch(`${API_URL}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    return handleResponse(response);
   },
-  
+
+  // Edit an existing image
   editImage: async (prompt, imageData) => {
-    try {
-      const response = await axios.post('/api/edit-image', { prompt, imageData });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { error: "Failed to edit image" };
-    }
+    const response = await fetch(`${API_URL}/edit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, image: imageData })
+    });
+    return handleResponse(response);
   },
-  
-  // Add cloud storage API methods
-  saveImage: async (imageData, metadata = {}) => {
-    try {
-      const response = await axios.post('/api/images/save', { 
-        imageData, 
+
+  // Save an image to the cloud storage
+  saveImage: async (imageData, metadata) => {
+    const response = await fetch(`${API_URL}/images`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        image: imageData, 
         metadata 
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { error: "Failed to save image" };
-    }
+      })
+    });
+    return handleResponse(response);
   },
-  
-  getImage: async (imageId) => {
-    try {
-      const response = await axios.get(`/api/images/${imageId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { error: "Failed to retrieve image" };
-    }
+
+  // Get an image by ID
+  getImage: async (id) => {
+    const response = await fetch(`${API_URL}/images/${id}`);
+    return handleResponse(response);
   },
-  
-  updateImageMetadata: async (imageId, metadata) => {
-    try {
-      const response = await axios.put(`/api/images/${imageId}/metadata`, { metadata });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { error: "Failed to update image metadata" };
-    }
+
+  // List all images with optional filtering
+  listImages: async (limit = 10, offset = 0, tag = null) => {
+    let url = `${API_URL}/images?limit=${limit}&offset=${offset}`;
+    if (tag) url += `&tag=${encodeURIComponent(tag)}`;
+    
+    const response = await fetch(url);
+    return handleResponse(response);
   },
-  
-  listImages: async (limit = 50, offset = 0, tag = null) => {
-    try {
-      let url = `/api/images?limit=${limit}&offset=${offset}`;
-      if (tag) url += `&tag=${tag}`;
-      
-      const response = await axios.get(url);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { error: "Failed to list images" };
-    }
+
+  // Update image metadata (e.g., update tags)
+  updateImageMetadata: async (id, metadata) => {
+    const response = await fetch(`${API_URL}/images/${id}/metadata`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ metadata })
+    });
+    return handleResponse(response);
   }
 };
 

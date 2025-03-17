@@ -1,3 +1,4 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 import { memo } from 'react';
 
@@ -10,7 +11,7 @@ function LoadingSpinner({ size = 'md', color = 'text-white' }) {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-5 w-5',
-    lg: 'h-6 w-6'
+    lg: 'h-8 w-8'
   };
   
   const sizeClass = sizeClasses[size] || sizeClasses.md;
@@ -26,11 +27,6 @@ function LoadingSpinner({ size = 'md', color = 'text-white' }) {
 LoadingSpinner.propTypes = {
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   color: PropTypes.string
-};
-
-LoadingSpinner.defaultProps = {
-  size: 'md',
-  color: 'text-white'
 };
 
 export default memo(LoadingSpinner);
