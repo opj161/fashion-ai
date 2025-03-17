@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import SplitPane from 'react-split-pane';
+import { ResizablePanes, Pane } from 'resizable-panes-react';
 
 function UnifiedEditorLayout({ controlPanel, previewPanel }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -54,16 +54,18 @@ function UnifiedEditorLayout({ controlPanel, previewPanel }) {
 
   return (
     <div className="unified-editor-layout h-full">
-      <SplitPane
-        split="vertical"
-        minSize={300}
-        defaultSize="40%"
-        primary="first"
+      <ResizablePanes 
+        uniqueId="editor-layout"
         className="h-full"
+        resizerClass="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
       >
-        <div className="h-full overflow-auto p-4">{controlPanel}</div>
-        <div className="h-full overflow-auto p-4">{previewPanel}</div>
-      </SplitPane>
+        <Pane id="control-panel" size={40}>
+          <div className="h-full overflow-auto p-4">{controlPanel}</div>
+        </Pane>
+        <Pane id="preview-panel" size={60}>
+          <div className="h-full overflow-auto p-4">{previewPanel}</div>
+        </Pane>
+      </ResizablePanes>
     </div>
   );
 }
