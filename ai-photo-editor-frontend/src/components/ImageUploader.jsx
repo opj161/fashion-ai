@@ -11,7 +11,7 @@ import { CARD_STYLES, BUTTON_VARIANTS } from '../styles/constants';
  * @param {boolean} isActive - Whether this component is currently active
  * @param {function} onActivate - Callback when the component becomes active
  */
-function ImageUploader({ onImageUploaded, isActive, onActivate }) {
+function ImageUploader({ onImageUploaded, isActive = true, onActivate = () => {} }) {
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -212,11 +212,6 @@ ImageUploader.propTypes = {
   onImageUploaded: PropTypes.func.isRequired,
   isActive: PropTypes.bool,
   onActivate: PropTypes.func
-};
-
-ImageUploader.defaultProps = {
-  isActive: false,
-  onActivate: () => {}
 };
 
 export default ImageUploader;

@@ -17,9 +17,6 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   // Tab management
   const [activeTab, setActiveTab] = useState('basics');
   
-  // Track which options have been explicitly changed by the user
-  const [modifiedOptions, setModifiedOptions] = useState({});
-  
   // Enhanced model description options
   const [gender, setGender] = useState('female'); // Essential, always included
   
@@ -39,7 +36,6 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
   const [lens, setLens] = useState('default');
   
   // Prompt preview and editing
-  const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [isUsingCustomPrompt, setIsUsingCustomPrompt] = useState(false);
   
@@ -59,9 +55,6 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       case 'lens': setLens(value); break;
       default: console.warn(`Unknown option: ${option}`);
     }
-    
-    // Mark this option as modified by the user
-    setModifiedOptions(prev => ({...prev, [option]: true}));
   }, []);
   
   // Memoize options arrays since they don't change
@@ -150,7 +143,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     { value: 'telephoto', label: 'Telephoto (135mm f/2.8)', description: 'Compressed perspective, isolated subject' },
   ], []);
 
-  // Memoize helper functions
+  // Define helper functions
   const getBackgroundDescription = useCallback(() => {
     if (background.startsWith('studio')) {
       return `Clean, professional ${background === 'studio-gradient' ? 'gradient' : 'white'} studio background with subtle shadows`;
@@ -247,7 +240,7 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
     const settingSection = getBackgroundDescription();
     
     // Style section - always include this for quality results
-    const styleSection = "The model should look authentic and relatable with a natural expression and a subtle smile. The clothing must fit perfectly and be the visual focus of the image.n";
+    const styleSection = "The model should look authentic and relatable with a natural expression and a subtle smile. The clothing must fit perfectly and be the visual focus of the image.";
     
     // Technical section - only include specific camera/lens settings if not default
     let technicalSection = "Professional fashion photography lighting with perfect exposure and color accuracy.";
@@ -266,8 +259,8 @@ function FashionModelPreview({ clothingImage, onImageGenerated }) {
       technicalSection = `${techDetails.join(', ')}. ${technicalSection}`;
     }
     
-    // Complete structured prompt
-    return `CREATE A PHOTOREALISTIC IMAGE of ${subjectSection}
+  // Complete structured prompt
+  return `CREATE A PHOTOREALISTIC IMAGE of ${subjectSection}
 
 Setting: ${settingSection}
 
@@ -276,21 +269,12 @@ Style: ${styleSection}
 Technical details: ${technicalSection}`;
   }, [
     bodySize, height, ethnicity, bodyType, age, gender, pose, 
-    background, lens, cameraAngle, 
+    lens, cameraAngle, 
     bodySizeOptions, heightOptions, ethnicityOptions, 
     bodyTypeOptions, ageOptions,
     getBackgroundDescription, getPoseDescription, 
     getCameraDescription, getLensDescription
   ]);
-  
-  // Toggle prompt editor visibility
-  const togglePromptEditor = () => {
-    if (!showPromptEditor) {
-      // When opening editor, initialize with current auto-generated prompt
-      setCustomPrompt(buildEnhancedPrompt());
-    }
-    setShowPromptEditor(!showPromptEditor);
-  };
   
   // Memoize the handleGenerate function
   const handleGenerate = useCallback(async () => {
@@ -301,7 +285,8 @@ Technical details: ${technicalSection}`;
       const data = await api.editImage(prompt, clothingImage);
       
       if (data.imageData) {
-        onImageGenerated(data.imageData, {
+        // Create metadata object
+        const metadata = {
           prompt,
           gender,
           // Only include non-default values in metadata
@@ -314,9 +299,24 @@ Technical details: ${technicalSection}`;
           pose: pose !== 'default' ? pose : null,
           cameraAngle: cameraAngle !== 'default' ? cameraAngle : null,
           lens: lens !== 'default' ? lens : null,
-          isCustomPrompt: isUsingCustomPrompt
-        });
-        toast.success('Fashion image generated successfully!');
+          isCustomPrompt: isUsingCustomPrompt,
+          tags: [], // Initialize with empty tags array
+          createdAt: new Date().toISOString()
+        };
+        
+        // Save image to cloud storage
+        try {
+          const savedImageData = await api.saveImage(data.imageData, metadata);
+          // Pass the image data, metadata, and the cloud storage ID to the parent component
+          onImageGenerated(data.imageData, metadata, savedImageData.id);
+          toast.success('Fashion image generated and saved successfully!');
+        } catch (saveError) {
+          console.error('Error saving to cloud storage:', saveError);
+          // Still pass the generated image to parent, but without an ID
+          onImageGenerated(data.imageData, metadata);
+          toast.success('Fashion image generated successfully!');
+          toast.error('But failed to save to cloud storage');
+        }
       } else {
         toast.error('Failed to generate fashion image');
       }

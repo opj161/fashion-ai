@@ -1,25 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import ImageUpload from './components/ImageUpload';
+import ImageUploader from './components/ImageUploader'; // Changed from ImageUpload
 import FashionModelPreview from './components/FashionModelPreview';
 import GeneratedImageView from './components/GeneratedImageView';
+import RecentImagesGallery from './components/RecentImagesGallery';
 
 function App() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [generatedImageMetadata, setGeneratedImageMetadata] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [imageId, setImageId] = useState(null);
   
   // New workspace state management
   const [workspaceStates, setWorkspaceStates] = useState([]);
   const [showWorkspacePanel, setShowWorkspacePanel] = useState(false);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
+  
+  // Gallery state
+  const [showGallery, setShowGallery] = useState(false);
 
   // Generate unique ID for workspace states
   const generateStateId = () => `state-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  
+  // Load workspace states from localStorage when the app loads
+  useEffect(() => {
+    const savedStates = localStorage.getItem('workspaceStates');
+    if (savedStates) {
+      try {
+        setWorkspaceStates(JSON.parse(savedStates));
+      } catch (e) {
+        console.error('Failed to parse saved workspace states', e);
+      }
+    }
+    
+    const savedActiveId = localStorage.getItem('activeWorkspaceId');
+    if (savedActiveId) {
+      setActiveWorkspaceId(savedActiveId);
+    }
+  }, []);
+  
+  // Save workspace states to localStorage when they change
+  useEffect(() => {
+    if (workspaceStates.length > 0) {
+      localStorage.setItem('workspaceStates', JSON.stringify(workspaceStates));
+    }
+  }, [workspaceStates]);
+  
+  // Save active workspace ID when it changes
+  useEffect(() => {
+    if (activeWorkspaceId) {
+      localStorage.setItem('activeWorkspaceId', activeWorkspaceId);
+    }
+  }, [activeWorkspaceId]);
 
   // Save current state function
   const saveCurrentState = (customName) => {
@@ -33,7 +69,8 @@ function App() {
       uploadedImage: uploadedImage,
       generatedImage: generatedImage,
       generatedImageMetadata: generatedImageMetadata,
-      currentStep: currentStep
+      currentStep: currentStep,
+      imageId: imageId
     };
     
     setWorkspaceStates(prev => [...prev, newState]);
@@ -49,9 +86,24 @@ function App() {
     setGeneratedImage(state.generatedImage);
     setGeneratedImageMetadata(state.generatedImageMetadata);
     setCurrentStep(state.currentStep);
+    setImageId(state.imageId || null);
     setActiveWorkspaceId(state.id);
     toast.success(`Restored: ${state.name}`);
   };
+  
+  // Load the active workspace when the app loads
+  useEffect(() => {
+    if (activeWorkspaceId && workspaceStates.length > 0) {
+      const activeState = workspaceStates.find(s => s.id === activeWorkspaceId);
+      if (activeState) {
+        setUploadedImage(activeState.uploadedImage);
+        setGeneratedImage(activeState.generatedImage);
+        setGeneratedImageMetadata(activeState.generatedImageMetadata);
+        setImageId(activeState.imageId || null);
+        setCurrentStep(activeState.currentStep || 1);
+      }
+    }
+  }, [activeWorkspaceId, workspaceStates]);
   
   // Handle image upload
   const handleImageUploaded = (imageData) => {
@@ -60,14 +112,26 @@ function App() {
   };
 
   // Handle image generation
-  const handleImageGenerated = (imageData, metadata) => {
+  const handleImageGenerated = (imageData, metadata, id) => {
     setGeneratedImage(imageData);
     setGeneratedImageMetadata(metadata);
+    setImageId(id || null);
     setCurrentStep(3);
     
     // Auto-save after generation
     const autoSaveName = `Generated ${new Date().toLocaleTimeString()}`;
     saveCurrentState(autoSaveName);
+  };
+
+  // Handle gallery image selected
+  const handleGalleryImageSelected = (image) => {
+    if (image?.imageData) {
+      setGeneratedImage(image.imageData);
+      setGeneratedImageMetadata(image.metadata || {});
+      setImageId(image.id || null);
+      setCurrentStep(3);
+      toast.success('Image loaded from gallery');
+    }
   };
 
   // Navigation functions
@@ -127,6 +191,12 @@ function App() {
               </h2>
               <div className="space-x-2">
                 <button 
+                  onClick={() => setShowGallery(!showGallery)}
+                  className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  {showGallery ? 'Hide Gallery' : 'Show Gallery'}
+                </button>
+                <button 
                   onClick={() => setShowWorkspacePanel(!showWorkspacePanel)}
                   className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
@@ -143,6 +213,13 @@ function App() {
                 </button>
               </div>
             </div>
+            
+            {/* Recent Images Gallery */}
+            {showGallery && (
+              <div className="mb-6 p-4 bg-white dark:bg-gray-800/50 border dark:border-gray-700 rounded-lg">
+                <RecentImagesGallery onImageSelected={handleGalleryImageSelected} />
+              </div>
+            )}
             
             {/* Workspace History Panel */}
             {showWorkspacePanel && workspaceStates.length > 0 && (
@@ -261,7 +338,7 @@ function App() {
                   <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
                     Step 1: Upload Your Clothing Image
                   </h2>
-                  <ImageUpload onImageUploaded={handleImageUploaded} />
+                  <ImageUploader onImageUploaded={handleImageUploaded} /> {/* Changed from ImageUpload */}
                 </div>
                 
                 {/* Step 2: Generate Fashion Model */}
@@ -298,7 +375,8 @@ function App() {
                   </div>
                   <GeneratedImageView 
                     image={generatedImage} 
-                    metadata={generatedImageMetadata} 
+                    metadata={generatedImageMetadata}
+                    imageId={imageId}
                   />
                 </div>
               </div>

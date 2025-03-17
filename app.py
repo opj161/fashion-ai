@@ -499,6 +499,31 @@ def get_image(image_id):
         "metadata": metadata
     })
 
+@app.route('/api/images/<image_id>/metadata', methods=['PUT'])
+def update_image_metadata(image_id):
+    """Update the metadata for a specific image"""
+    data = request.json
+    
+    if not data or 'metadata' not in data:
+        return jsonify({"error": "No metadata provided"}), 400
+    
+    metadata = data.get('metadata')
+    
+    # Validate that metadata is a dictionary
+    if not isinstance(metadata, dict):
+        return jsonify({"error": "Metadata must be an object"}), 400
+    
+    # Update the metadata for the image
+    success = storage.update_image_metadata(image_id, metadata)
+    
+    if not success:
+        return jsonify({"error": "Failed to update metadata or image not found"}), 404
+    
+    return jsonify({
+        "id": image_id,
+        "message": "Metadata updated successfully"
+    })
+
 @app.route('/api/images', methods=['GET'])
 def list_images():
     limit = request.args.get('limit', 50, type=int)
@@ -519,7 +544,11 @@ def index():
         "endpoints": [
             "/api/health",
             "/api/generate-image",
-            "/api/edit-image"
+            "/api/edit-image",
+            "/api/images/save",
+            "/api/images/<image_id>",
+            "/api/images/<image_id>/metadata",
+            "/api/images"
         ]
     })
 

@@ -42,6 +42,15 @@ const api = {
     }
   },
   
+  updateImageMetadata: async (imageId, metadata) => {
+    try {
+      const response = await axios.put(`/api/images/${imageId}/metadata`, { metadata });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to update image metadata" };
+    }
+  },
+  
   listImages: async (limit = 50, offset = 0, tag = null) => {
     try {
       let url = `/api/images?limit=${limit}&offset=${offset}`;

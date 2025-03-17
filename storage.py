@@ -77,6 +77,52 @@ def get_image(image_id):
     
     return image_base64, metadata
 
+def update_image_metadata(image_id, new_metadata):
+    """
+    Update the metadata for an existing image
+    
+    Args:
+        image_id: The ID of the image to update
+        new_metadata: The metadata to update or replace
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    metadata_path = METADATA_DIR / f"{image_id}.json"
+    
+    # Check if the metadata file exists
+    if not metadata_path.exists():
+        print(f"Metadata file not found for image {image_id}")
+        return False
+    
+    try:
+        # Load existing metadata
+        with open(metadata_path, "r") as f:
+            metadata = json.load(f)
+        
+        # Update with new values, preserving ID and timestamp
+        original_id = metadata.get('id')
+        original_timestamp = metadata.get('timestamp')
+        
+        metadata.update(new_metadata)
+        
+        # Ensure ID and timestamp are preserved
+        if original_id:
+            metadata['id'] = original_id
+        if original_timestamp:
+            metadata['timestamp'] = original_timestamp
+        
+        # Write updated metadata back to file
+        with open(metadata_path, "w") as f:
+            json.dump(metadata, f, indent=2)
+        
+        print(f"Updated metadata for image {image_id}")
+        return True
+    
+    except Exception as e:
+        print(f"Error updating metadata for image {image_id}: {e}")
+        return False
+
 def list_images(limit=50, offset=0, tag=None):
     """
     List available images with optional filtering
@@ -112,9 +158,22 @@ def list_images(limit=50, offset=0, tag=None):
                 if tag and ('tags' not in metadata or tag not in metadata['tags']):
                     continue
                     
+                # Get the corresponding image file
+                image_id = metadata.get('id')
+                if image_id:
+                    image_path = IMAGES_DIR / f"{image_id}.jpg"
+                    if image_path.exists():
+                        # Read image data
+                        with open(image_path, "rb") as img_file:
+                            image_data = img_file.read()
+                        
+                        # Add base64 encoded image data to metadata
+                        metadata['imageData'] = base64.b64encode(image_data).decode('utf-8')
+                
                 # Add to results
                 result.append(metadata)
-            except:
+            except Exception as e:
+                print(f"Error processing metadata file {metadata_file}: {e}")
                 continue
     
     return result
