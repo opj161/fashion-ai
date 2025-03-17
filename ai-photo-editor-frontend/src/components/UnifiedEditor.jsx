@@ -6,6 +6,9 @@ import PreviewPanel from './PreviewPanel';
 import TabButton from './common/TabButton';
 import BasicsTabPanel from './tab-panels/BasicsTabPanel';
 import AppearanceTabPanel from './tab-panels/AppearanceTabPanel';
+import EnvironmentTabPanel from './tab-panels/EnvironmentTabPanel'; // Add this import
+import PhotographyTabPanel from './tab-panels/PhotographyTabPanel'; // Add this import
+import AdvancedTabPanel from './tab-panels/AdvancedTabPanel'; // Add this import
 import ImageUploader from './ImageUploader';
 import RecentImagesGallery from './RecentImagesGallery';
 // eslint-disable-next-line no-unused-vars

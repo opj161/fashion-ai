@@ -18,8 +18,8 @@ function UnifiedEditorLayout({ controlPanel, previewPanel }) {
 
   if (isMobile) {
     return (
-      <div className="unified-editor-layout h-full">
-        <div className="mb-4 flex justify-center">
+      <div className="unified-editor-layout h-full flex flex-col">
+        <div className="flex justify-center mb-4">
           <div className="inline-flex rounded-md shadow-sm" role="group">
             <button
               type="button"
@@ -45,7 +45,7 @@ function UnifiedEditorLayout({ controlPanel, previewPanel }) {
             </button>
           </div>
         </div>
-        <div className="h-full overflow-auto p-4">
+        <div className="flex-1 overflow-auto">
           {showControlPanel ? controlPanel : previewPanel}
         </div>
       </div>
@@ -60,10 +60,10 @@ function UnifiedEditorLayout({ controlPanel, previewPanel }) {
         resizerClass="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
       >
         <Pane id="control-panel" size={40}>
-          <div className="h-full overflow-auto p-4">{controlPanel}</div>
+          {controlPanel}
         </Pane>
         <Pane id="preview-panel" size={60}>
-          <div className="h-full overflow-auto p-4">{previewPanel}</div>
+          {previewPanel}
         </Pane>
       </ResizablePanes>
     </div>
